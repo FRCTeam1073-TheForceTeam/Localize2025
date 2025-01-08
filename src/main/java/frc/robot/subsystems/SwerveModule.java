@@ -115,7 +115,8 @@ public class SwerveModule extends DiagnosticsBase implements Sendable
 
     // Return drive position in meters.
     public double getDrivePosition()
-    {
+    {   //*NOTE */ Set Alpha to 1 if you are recalibrating
+        
         //double alpha = 4.87 / 5.356; (old)
         //double alpha = 1/524 / 1.6296 (new)
         double alpha = 0.95598 * 0.9352;

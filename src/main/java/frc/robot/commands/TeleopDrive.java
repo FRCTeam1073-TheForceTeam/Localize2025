@@ -20,7 +20,7 @@ public class TeleopDrive extends SchemaArbiter
   double startAngle;
   double desiredAngle;
   ChassisSpeeds chassisSpeeds;
-  Pose2d targetRotation;
+  Pose2d Rotation;
   Pose2d robotRotation;
   Drivetrain m_drivetrain;
   OI m_OI;
@@ -81,6 +81,7 @@ public class TeleopDrive extends SchemaArbiter
   public void initialize()
   {
     System.out.println("TeleopDrive: Init");
+    aprilTagFinder.setSearchTagId(3);
     super.initialize();
   }
 

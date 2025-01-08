@@ -51,7 +51,7 @@ public class AprilTagFinder extends SubsystemBase {
 
   /// Sets the tagID we're searching for.
   public void setSearchTagId(int id) {
-    this.searchTagID = id;
+    searchTagID = id;
   }
 
   /// Returns the current tag data found.
