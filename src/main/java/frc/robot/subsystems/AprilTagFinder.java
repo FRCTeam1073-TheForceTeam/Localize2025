@@ -133,6 +133,7 @@ public class AprilTagFinder extends SubsystemBase {
     SmartDashboard.putNumber("AprilTag/Yaw", this.tagData.yaw);
     SmartDashboard.putBoolean("AprilTag/Valid", this.tagData.isValid()); // Allows dashboard indicator.
     SmartDashboard.putBoolean("AprilTag/Aligned", aligned);
+    SmartDashboard.putString("AprilTag/TagData", tagData.toString());
   }
 
 }
