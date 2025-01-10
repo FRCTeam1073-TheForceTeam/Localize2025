@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
-import java.util.ArrayList;
-import edu.wpi.first.apriltag.AprilTag;
+import java.util.List;
+
+import org.photonvision.targeting.PhotonTrackedTarget;
+
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -44,33 +46,36 @@ public class Localizer extends SubsystemBase
         // only run sensor update if we've moved enough and a few seconds have passed
         if (now - lastUpdateTime > 1.0)
         {
-            ArrayList<AprilTag> tags = /*finder.getTags();*/ null; // TODO: fix this
-            for (int i = 0; i < tags.size(); i++)
-            {
-                /*
-                * if (tag is "good")
-                * {
-                *      get the pose3d of the tag relative to the robot
-                *      find the landmark in the map
-                *      if (we get the landmark)
-                *      {
-                *          apply this as an inverse transform to find the robot's position
-                *      }
-                * }
-                */
-                Pose3d apriltagPose = map.getApriltagLandmark(tags.get(i).ID);
-                if (apriltagPose != null)
-                {
-                    //transform of the tag to robot
-                    Transform3d transform = new Transform3d(new Pose3d(), tags.get(i).pose);
-                    Pose3d measurement = apriltagPose.transformBy(transform);
-                    Pose2d measurement2d = new Pose2d(
-                        new Translation2d(measurement.getX(), measurement.getY()), 
-                        new Rotation2d(measurement.getRotation().getAngle())
-                    );
-                    estimator.addVisionMeasurement(measurement2d, now);
-                }
-            }
+            // //ArrayList<AprilTag> tags = /*finder.getTags();*/ null; // TODO: fix this
+            // this.response = camera.getLatestResult();  
+            // List<PhotonTrackedTarget> targets = response.getTargets();
+
+            // for (int i = 0; i < tags.size(); i++)
+            // {
+            //     /*
+            //     * if (tag is "good")
+            //     * {
+            //     *      get the pose3d of the tag relative to the robot
+            //     *      find the landmark in the map
+            //     *      if (we get the landmark)
+            //     *      {
+            //     *          apply this as an inverse transform to find the robot's position
+            //     *      }
+            //     * }
+            //     */
+            //     Pose3d apriltagPose = map.getApriltagLandmark(tags.get(i).ID);
+            //     if (apriltagPose != null)
+            //     {
+            //         //transform of the tag to robot
+            //         Transform3d transform = new Transform3d(new Pose3d(), tags.get(i).pose);
+            //         Pose3d measurement = apriltagPose.transformBy(transform);
+            //         Pose2d measurement2d = new Pose2d(
+            //             new Translation2d(measurement.getX(), measurement.getY()), 
+            //             new Rotation2d(measurement.getRotation().getAngle())
+            //         );
+            //         estimator.addVisionMeasurement(measurement2d, now);
+            //     }
+            // }
             lastUpdateTime = now;
         }
     }

@@ -81,7 +81,6 @@ public class TeleopDrive extends SchemaArbiter
   public void initialize()
   {
     System.out.println("TeleopDrive: Init");
-    aprilTagFinder.setSearchTagId(3);
     super.initialize();
   }
 
