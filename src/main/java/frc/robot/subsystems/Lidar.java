@@ -5,11 +5,10 @@ import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
 
-
 public class Lidar extends DiagnosticsSubsystem {
-    SerialPort serialPort = new SerialPort(115200, SerialPort.Port.kMXP, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
-    byte triggerCommand[] = new byte[4];
-    private final double elevationFactor = 0.94293; //0.97237; //compensating for the fact that it's not level: cos(angle of rangeFinder)
+    SerialPort serialPort = new SerialPort(1000000, SerialPort.Port.kUSB1, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
+    byte startCommand[] = new byte[2];
+    //private final double elevationFactor = 0.94293; //0.97237; //compensating for the fact that it's not level: cos(angle of rangeFinder)
 
     double range = 0.0;
     double filtered_range = 0.0;
@@ -20,77 +19,78 @@ public class Lidar extends DiagnosticsSubsystem {
         super.setSubsystem("Lidar");
         serialPort.setFlowControl(SerialPort.FlowControl.kNone);
         
-        triggerCommand[0] = 0x5a;
-        triggerCommand[1] = 0x04;
-        triggerCommand[2] = 0x04;
-        triggerCommand[3] = 0x62;
+        startCommand[0] = 0xA5;
+        startCommand[1] = 0x20;
 
         Handshake();
     }
 
     public void Handshake () {
-        byte FrameCommand[] = new byte[6];
-        FrameCommand[0] = 0x5A;
-        FrameCommand[1] = 0x06;
-        FrameCommand[2] = 0x03;
-        FrameCommand[3] = 0x0;
-        FrameCommand[4] = 0x0;
-        FrameCommand[5] = 0x63;
-        serialPort.write(FrameCommand, 6);
-        serialPort.flush();
+        byte StopCommand[] = new byte[2];
+        StopCommand[0] = 0xA5;
+        StopCommand[1] = 0x25;
+
+        // TODO: fill out stop command
+        //send stop
+        serialPort.write(StopCommand, StopCommand.length);
         try {
             Thread.sleep(50);
         }
         catch (Exception e) {
             System.out.println(e);
         }
+        serialPort.flush();
         serialPort.reset();
-        serialPort.write(triggerCommand, 4);
+        // ?? add GET_HEALTH Request?
+        //startCommand
+        serialPort.write(startCommand, startCommand.length);
     }
 
     public void parseData (byte message[]) {
-        if (message.length < 9) {
-            System.err.println("Rangefinder message format ERROR");
-            return;
-        }
-
-        if (message[0] != 0x59 || message[1] != 0x59) {
-            System.err.println("Rangefinder message format ERROR");
-            return;
-        }
-
-        int dl = (message[2] & 0xFF);
-        int dh = (message[3] & 0xFF);
-        range = ((dl + 255 * dh) * 0.01) * elevationFactor;
-
-        // IIR filter:
-        filtered_range = 0.8 * filtered_range + 0.2 * range; 
         
-        int il = (message[4] & 0xFF);
-        int ih = (message[5] & 0xFF);
-
-        intensity = (il + 255 * ih) * 1.5259e-5;
         timestamp = Timer.getFPGATimestamp();
     }
 
-    public double getRange() {
-        return range;
-    }
+    // public double getRange() {
+    //     return range;
+    // }
 
-    public double getFilteredRange() {
-        return filtered_range;
-    }
+    // public double getFilteredRange() {
+    //     return filtered_range;
+    // }
 
-    public double getIntensity() {
-        return intensity;
-    }
+    // public double getIntensity() {
+    //     return intensity;
+    // }
 
     public double getTimestamp() {
         return timestamp;
     }
 
+    public void read(){
+        //clockwise is positive - opposite for robot?
+        //angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
+
+    }
+
     @Override
     public void periodic() {
+        // wait until descriptor is available
+        // loop until full scan data has been processed
+        //      poll until bytes available >= one entry
+        //         read one entry
+        //read()
+        //      parse one entry
+        //parse()
+        // if full scan has been complete (S = 1)
+        //    Stop/Restart Scan (Handshake)
+        //      stop scan
+        //      send get_healty request, verify not in Protection Stop (HW Failure) state
+        //      start scan
+        //  note that data response packets will stop if HW failure is detected
+        //      eventually, add timeout and reset
+
+        
         int bytestoread = serialPort.getBytesReceived();
         byte bytes[];
 
@@ -98,18 +98,18 @@ public class Lidar extends DiagnosticsSubsystem {
             bytes = serialPort.read(bytestoread);
 
             parseData(bytes);
-
+            //request a new scan
             //System.out.println(Arrays.toString(bytes));
-            serialPort.write(triggerCommand, 4);
+            serialPort.write(startCommand, startCommand.length);
         }
     }
 
     @Override
     public void initSendable(SendableBuilder builder) {
         super.initSendable(builder);
-        builder.addDoubleProperty("Range", this::getRange, null);
-        builder.addDoubleProperty("Intensity", this::getIntensity, null);
-        builder.addDoubleProperty("Timestamp", this::getTimestamp, null);
+        // builder.addDoubleProperty("Range", this::getRange, null);
+        // builder.addDoubleProperty("Intensity", this::getIntensity, null);
+        // builder.addDoubleProperty("Timestamp", this::getTimestamp, null);
     }
 
     @Override
