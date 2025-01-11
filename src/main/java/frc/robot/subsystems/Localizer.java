@@ -78,6 +78,8 @@ public class Localizer extends SubsystemBase
             // }
             lastUpdateTime = now;
         }
+        //m_field.setRobotPose(m_odometry.getPoseMeters()); //maybe this should be a command
+
     }
     public Pose2d getOdometry()
     {

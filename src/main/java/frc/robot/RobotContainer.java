@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -20,6 +21,7 @@ public class RobotContainer
   private final Drivetrain m_drivetrain = new Drivetrain();
   private final OI m_OI = new OI();
   private final AprilTagFinder m_aprilTagFinder = new AprilTagFinder();
+  private final Field2d m_field = new Field2d();
 
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder);
 
@@ -29,6 +31,7 @@ public class RobotContainer
 
     SmartDashboard.putData(m_drivetrain);
     SmartDashboard.putData(m_OI);
+    SmartDashboard.putData("Field", m_field);
 
     configureBindings();
   }
