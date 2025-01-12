@@ -106,7 +106,7 @@ public class AprilTagFinder extends SubsystemBase
     
     // front right camera
     PhotonTrackedTarget targetFR = frontRightCam.getLatestResult().getBestTarget();
-    if (targetFL != null && map.getTagPose(targetFR.getFiducialId()).isPresent())
+    if (targetFR != null && map.getTagPose(targetFR.getFiducialId()).isPresent())
     {
       Pose3d robotPoseFR = PhotonUtils.estimateFieldToRobotAprilTag(targetFR.getBestCameraToTarget(),
                                                                       map.getTagPose(targetFR.getFiducialId()).get(), 
