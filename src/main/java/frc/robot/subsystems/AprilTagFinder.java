@@ -56,7 +56,6 @@ public class AprilTagFinder extends SubsystemBase
   double responseBLTimestamp;
   double responseBRTimestamp;
 
-  public static final AprilTagFieldLayout map = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
 
   public int wait_counter = 0;
 
@@ -76,8 +75,7 @@ public class AprilTagFinder extends SubsystemBase
     return responseBR;
   }
 
-
-  public void readTagData() 
+  public void readTagData()
   {
     // TODO: use new method instead of getLatestResult()
     responseFL = frontLeftCam.getLatestResult().getTargets();
@@ -96,20 +94,20 @@ public class AprilTagFinder extends SubsystemBase
 
     // front left camera
     PhotonTrackedTarget targetFL = frontLeftCam.getLatestResult().getBestTarget();
-    if (targetFL != null && map.getTagPose(targetFL.getFiducialId()).isPresent())
+    if (targetFL != null && FieldMap.fieldMap.getTagPose(targetFL.getFiducialId()).isPresent())
     {
       Pose3d robotPoseFL = PhotonUtils.estimateFieldToRobotAprilTag(targetFL.getBestCameraToTarget(),
-                                                                      map.getTagPose(targetFL.getFiducialId()).get(), 
+                                                                      FieldMap.fieldMap.getTagPose(targetFL.getFiducialId()).get(), 
                                                                       fLCamTransform3d);
       measurements.add(new VisionMeasurement(robotPoseFL.toPose2d(), responseFLTimestamp, targetFL.getFiducialId()));
     }
     
     // front right camera
     PhotonTrackedTarget targetFR = frontRightCam.getLatestResult().getBestTarget();
-    if (targetFL != null && map.getTagPose(targetFR.getFiducialId()).isPresent())
+    if (targetFR != null && FieldMap.fieldMap.getTagPose(targetFR.getFiducialId()).isPresent())
     {
       Pose3d robotPoseFR = PhotonUtils.estimateFieldToRobotAprilTag(targetFR.getBestCameraToTarget(),
-                                                                      map.getTagPose(targetFR.getFiducialId()).get(), 
+                                                                      FieldMap.fieldMap.getTagPose(targetFR.getFiducialId()).get(), 
                                                                       fRCamTransform3d);
       measurements.add(new VisionMeasurement(robotPoseFR.toPose2d(), responseFRTimestamp, targetFR.getFiducialId()));
     }
@@ -137,10 +135,6 @@ public class AprilTagFinder extends SubsystemBase
     if(getMeasurements().size() > 0) {
       SmartDashboard.putNumber("FL Measurement X", getMeasurements().get(0).pose.getX());
       SmartDashboard.putNumber("FL Measurement Y", getMeasurements().get(0).pose.getY());
-    }
-    if(getMeasurements().size() > 0) {
-      SmartDashboard.putNumber("FR Measurement X", getMeasurements().get(0).pose.getX());
-      SmartDashboard.putNumber("FR Measurement Y", getMeasurements().get(0).pose.getY());
     }
   }
 }

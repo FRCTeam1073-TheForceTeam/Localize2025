@@ -1,3 +1,5 @@
+// LOCALIZER: accesses drivetrain for odometry and AprilTagFinder for vision measurements
+
 package frc.robot.subsystems;
 import java.util.List;
 
@@ -15,15 +17,15 @@ public class Localizer extends SubsystemBase
 {
     private Drivetrain driveTrain;
     private SwerveDrivePoseEstimator estimator;
-    private MapInterface map;
+    private FieldMap fieldMap;
     private AprilTagFinder finder;
     private double lastUpdateTime;
     //added a set transform from sensor to center of the robot to the sensor and can have multiple as needed
     private final Transform3d sensorTransform = new Transform3d();
-    public Localizer(Drivetrain driveTrain, MapInterface map, AprilTagFinder finder)
+    public Localizer(Drivetrain driveTrain, FieldMap fieldMap, AprilTagFinder finder)
     {
         this.driveTrain = driveTrain;
-        this.map = map;
+        this.fieldMap = fieldMap;
         this.finder = finder;
         estimator = new SwerveDrivePoseEstimator(
             driveTrain.getKinematics(), driveTrain.getOdometry().getRotation(), driveTrain.getSwerveModulePositions(), new Pose2d()
@@ -86,19 +88,21 @@ public class Localizer extends SubsystemBase
         // TODO: actually implement this
         return new Pose2d();
     }
-    public void additionalSensorMeasurement(int id)
+    public void additionalSensorMeasurement(int id, FieldMap fieldMap)
     {
         // TODO:
-        Pose3d landmarkPose = map.getLandmark(id); 
         // null needs to be the sensor input on the line below
         Transform3d transform3d = new Transform3d(new Pose3d(), null); 
-        //transforms the position of the landmark by the transform 
-        Pose3d measurement = landmarkPose.transformBy(transform3d); 
-        measurement = measurement.transformBy(sensorTransform);
-        Pose2d measurement2d = new Pose2d(
-            new Translation2d(measurement.getX(), measurement.getY()),
-            new Rotation2d(measurement.getRotation().getAngle()) 
-        );
-        estimator.addVisionMeasurement(measurement2d, Timer.getFPGATimestamp());
+        Pose2d landmarkPose;
+                //transforms the position of the landmark by the transform 
+        
+        
+        // Pose3d measurement = landmarkPose.transformBy(transform3d); 
+        // measurement = measurement.transformBy(sensorTransform);
+        // Pose2d measurement2d = new Pose2d(
+        //     new Translation2d(measurement.getX(), measurement.getY()),
+        //     new Rotation2d(measurement.getRotation().getAngle()) 
+        // );
+        // estimator.addVisionMeasurement(measurement2d, Timer.getFPGATimestamp());
     }
 }

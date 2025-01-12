@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import java.util.Map;
+
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -13,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.AprilTagFinder;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.MapDisplay;
 import frc.robot.subsystems.OI;
 import frc.robot.subsystems.SwerveModuleConfig;
 
@@ -22,6 +25,7 @@ public class RobotContainer
   private final OI m_OI = new OI();
   private final AprilTagFinder m_aprilTagFinder = new AprilTagFinder();
   private final Field2d m_field = new Field2d();
+  private final MapDisplay m_MapDisplay = new MapDisplay(m_drivetrain, null, null);
 
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder);
 
