@@ -1,4 +1,5 @@
 package frc.robot.subsystems;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -11,16 +12,26 @@ public class Lidar extends DiagnosticsSubsystem {
     byte startCommand[] = new byte[2];
     boolean measureMode = false;
     boolean arrayMode = false;
+    private final int bytesPerScan = 5;
+    int numScansRead;
+    int numBytesAvail = 0;
+    int numScansToRead;
+    Array [byte[]] dataArray;
+    ArrayList <byte[]> dataArrayList;
+    float quality;
+    float range_mm;
+    float angle_deg;
+    float range_m;
+    float angle_rad;
     //TODO: add scan descriptor to check descriptor string
     byte scanDescriptor[] = {5A, A5, 05, 00, 00, 40, 81};
     //private final double elevationFactor = 0.94293; //0.97237; //compensating for the fact that it's not level: cos(angle of rangeFinder)
 
-    double range = 0.0;
     double filtered_range = 0.0;
     double intensity = 0.0; // starts to die at under 0.005
     double timestamp = 0.0;
-    ArrayList one;
-    ArrayList two;
+    ArrayList <Scan> one;
+    ArrayList <Scan> two;
 
     public Lidar () {
         super.setSubsystem("Lidar");
@@ -83,44 +94,61 @@ public class Lidar extends DiagnosticsSubsystem {
         return timestamp;
     }
 
-    public void read(){
-        //clockwise is positive - opposite for robot - convert to radians
-        //angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
-        //distance = Math.pow(2, 8) * distance[15:8] + distance[7:0]
-    }
 
     public boolean parseDescriptor(){
         return serialPort.read(7) == scanDescriptor;
     }
 
-    public void parseMeasurements(){
+    // what is most efficient?
+    public void readAndParseMeasurements(int numAvail){
         //put data into scan class - return array list of scan object to add to arrayList?
+        // round down to determine number of full scans available
+        numScansToRead = numAvail/bytesPerScan;
+        dataArray = serialPort.read(numScansToRead * bytesPerScan);
+        //dataArrayList = tbd
+        // TODO: put parse data into arraylist
+        //clockwise is positive - opposite for robot - convert to radians
+        //angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
+        //distance = Math.pow(2, 8) * distance[15:8] + distance[7:0]
+        // TODO: Format Data Packets
+        for(int i = 0; i < numScansToRead; i ++){
+            // divide by 4 because to drop the lower two bits
+            quality = dataArrayList.get(0 + (i * bytesPerScan)) / 4;
+            // angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
+            angle_deg = Math.pow(2, 7) * dataArrayList.get(2 + (i * bytesPerScan)) + (dataArrayList.get(1 + (i * bytesPerScan)) / 2);
+            //range = Math.pow(2, 8) * distance[15:8] + distance[7:0]
+            range_mm = Math.pow(2, 8) * dataArrayList.get(4 + (i * bytesPerScan)) + dataArrayList.get(3 + (i * bytesPerScan));
+            // TODO: convert to right thing
+            // best way to 
+            if(arrayMode){
+                one.add(new Scan(range_m, angle_rad, quality));
+            }
+
+            if(!arrayMode){
+                two.add(new Scan(range_m, angle_rad, quality));
+            }
+
+        }
+        // don't need anymore
+        dataArrayList.clear();
     }
 
     @Override
     public void periodic() {
-        int bytesToRead = serialPort.getBytesReceived();
- 
+        numBytesAvail = serialPort.getBytesReceived();
         if(measureMode){
-            //parse()
-            //fill array based on boolean
-            if(arrayMode){
-                //fill Array one
-            }
-
-            if(!arrayMode){
-                //fill Array two
-            }
+            // read and parse all available scan data to read - fill array
+            readAndParseMeasurements(numBytesAvail);
         }
 
-        if(bytesToRead >= 7){
-            // read exactly that many bytes
-            //parseDescriptor();
-            parseDescriptor();
-            measureMode = true;
+        if(numBytesAvail >= 7){
+            // read and check the first 7 bytes of response
+            if(parseDescriptor()){
+                // expected descriptor received, switch to read data
+                measureMode = true;
+            }
         }
         
-        // TODO create scan class
         // TODO transform 3D
         // loop until full scan data has been processed
         //      poll until bytes available >= one entry
