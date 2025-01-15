@@ -28,6 +28,6 @@ public class MapDisplay extends SubsystemBase{
     public void periodic()
     { 
         field.setRobotPose(driveTrain.getOdometry());
-        SmartDashboard.putData("Field", field);
+        SmartDashboard.putData("Field", field); //the widget for this is the dropdown named "field"
     }
 }

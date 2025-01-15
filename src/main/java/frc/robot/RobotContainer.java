@@ -6,7 +6,10 @@ package frc.robot;
 
 import java.util.Map;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -29,6 +32,10 @@ public class RobotContainer
 
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder);
 
+  private boolean isRed;
+
+  private Pose2d where = new Pose2d();
+
   public RobotContainer() 
   {
     CommandScheduler.getInstance().setDefaultCommand(m_drivetrain, m_teleopCommand);
@@ -41,6 +48,37 @@ public class RobotContainer
   }
 
   private void configureBindings() {}
+
+  public void autonomousInit()
+  {
+    SmartDashboard.putString("Alliance", "None");
+    if (m_aprilTagFinder != null)
+    {
+      if(DriverStation.getAlliance().isPresent())
+      {
+        if (DriverStation.getAlliance().get() == Alliance.Blue)
+        {
+          m_drivetrain.resetOdometry(where);
+        }
+      }
+
+      if(DriverStation.getAlliance().isPresent())
+      {
+        if (DriverStation.getAlliance().get() == Alliance.Red)
+        {
+          SmartDashboard.putString("Alliance", "Red");
+          isRed = true;
+          m_drivetrain.resetOdometry(where);
+        }
+        else
+        {
+          SmartDashboard.putString("Alliance", "Blue");
+          isRed = false;
+          m_drivetrain.resetOdometry(where);
+        }
+      }
+    }
+  }
 
   public Command getAutonomousCommand() 
   {
