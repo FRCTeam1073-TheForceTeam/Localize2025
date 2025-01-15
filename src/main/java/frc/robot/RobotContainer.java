@@ -8,6 +8,7 @@ import java.util.Map;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -74,6 +75,7 @@ public class RobotContainer
         {
           SmartDashboard.putString("Alliance", "Blue");
           isRed = false;
+          Pose2d where = new Pose2d(3.6576, 4.0259, new Rotation2d(0)); //#ID 18
           m_drivetrain.resetOdometry(where);
         }
       }
