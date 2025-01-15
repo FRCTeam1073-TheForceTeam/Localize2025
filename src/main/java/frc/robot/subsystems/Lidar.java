@@ -9,37 +9,31 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class Lidar extends DiagnosticsSubsystem {
     SerialPort serialPort = new SerialPort(1000000, SerialPort.Port.kUSB1, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
-    byte startCommand[] = new byte[2];
+    byte startCommand[] = {(byte) 0xa5, 0x20};
     boolean measureMode = false;
-    boolean arrayMode = false;
+    boolean writeToOne = false;
     private final int bytesPerScan = 5;
     int numScansRead;
     int numBytesAvail = 0;
     int numScansToRead;
-    Array [byte[]] dataArray;
-    ArrayList <byte[]> dataArrayList;
+    int offset;
     float quality;
     float range_mm;
     float angle_deg;
     float range_m;
     float angle_rad;
-    //TODO: add scan descriptor to check descriptor string
-    byte scanDescriptor[] = {5A, A5, 05, 00, 00, 40, 81};
+    byte scanDescriptor[] = {(byte) 0x5A, (byte) 0xA5, (byte) 0x05, 0x00, 0x00, 0x40, (byte) 0x81};
     //private final double elevationFactor = 0.94293; //0.97237; //compensating for the fact that it's not level: cos(angle of rangeFinder)
 
     double filtered_range = 0.0;
     double intensity = 0.0; // starts to die at under 0.005
     double timestamp = 0.0;
-    ArrayList <Scan> one;
-    ArrayList <Scan> two;
+    ArrayList <Scan> one = new ArrayList<>();
+    ArrayList <Scan> two = new ArrayList<>();
 
     public Lidar () {
         super.setSubsystem("Lidar");
         serialPort.setFlowControl(SerialPort.FlowControl.kNone);
-        
-        startCommand[0] = (byte) 0xa5;
-        startCommand[1] = 0x20;
-
         Handshake();
     }
 
@@ -48,7 +42,6 @@ public class Lidar extends DiagnosticsSubsystem {
         StopCommand[0] = (byte) 0xa5;
         StopCommand[1] = 0x25;
 
-        // TODO: fill out stop command
         //send stop
         serialPort.write(StopCommand, StopCommand.length);
         try {
@@ -64,73 +57,65 @@ public class Lidar extends DiagnosticsSubsystem {
         serialPort.write(startCommand, startCommand.length);
     }
 
-    public void parseData (byte message[]) {
-        
-        timestamp = Timer.getFPGATimestamp();
-    }
-
-    // public double getRange() {
-    //     return range;
-    // }
-
-    // public double getFilteredRange() {
-    //     return filtered_range;
-    // }
-
-    // public double getIntensity() {
-    //     return intensity;
-    // }
-    public ArrayList getArray(){
-        if(arrayMode){
-            return two;
+    public ArrayList<Scan> getScan(){
+        if(writeToOne){
+            return two; 
         }
 
-        if(!arrayMode){
+        if(!writeToOne){
             return one;
         }
     }
 
     public double getTimestamp() {
+        //TODO: timestamp for one and two
         return timestamp;
     }
 
 
     public boolean parseDescriptor(){
-        return serialPort.read(7) == scanDescriptor;
+        byte [] received = serialPort.read(7);
+        return Arrays.equals(received, scanDescriptor);
     }
 
     // what is most efficient?
     public void readAndParseMeasurements(int numAvail){
+        // TODO: promote byte to an int - do something to make it from 0 to 255 - look through old rangefinder for converting values
         //put data into scan class - return array list of scan object to add to arrayList?
         // round down to determine number of full scans available
+
         numScansToRead = numAvail/bytesPerScan;
-        dataArray = serialPort.read(numScansToRead * bytesPerScan);
-        //dataArrayList = tbd
-        // TODO: put parse data into arraylist
-        //clockwise is positive - opposite for robot - convert to radians
-        //angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
-        //distance = Math.pow(2, 8) * distance[15:8] + distance[7:0]
+        byte[] rawData = serialPort.read(numScansToRead * bytesPerScan);
+        // TODO: don't need to make ArrayList
+        // TODO: clockwise is positive - opposite for robot - convert to radians
         // TODO: Format Data Packets
         for(int i = 0; i < numScansToRead; i ++){
+            offset = i * bytesPerScan;
+           if((rawData[0] & 0x01) == 1){
+                // TODO: Write timestamp when switch
+                if(writeToOne) two.clear();
+                else one.clear();
+                writeToOne = !writeToOne;
+            } 
             // divide by 4 because to drop the lower two bits
-            quality = dataArrayList.get(0 + (i * bytesPerScan)) / 4;
+            quality = rawData[(offset) + 0] / 4;
             // angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
-            angle_deg = Math.pow(2, 7) * dataArrayList.get(2 + (i * bytesPerScan)) + (dataArrayList.get(1 + (i * bytesPerScan)) / 2);
+            angle_deg = 128 * rawData[(offset) + 2] + (rawData[offset + 1]/ 2);
             //range = Math.pow(2, 8) * distance[15:8] + distance[7:0]
-            range_mm = Math.pow(2, 8) * dataArrayList.get(4 + (i * bytesPerScan)) + dataArrayList.get(3 + (i * bytesPerScan));
-            // TODO: convert to right thing
+            range_mm = 256 * rawData[(4 + (offset))] + rawData[(offset) + 3];
+            angle_rad = angle_deg / 180.0f * 3.141592f;
+            range_m = range_mm / 1000;
             // best way to 
-            if(arrayMode){
+            // figure out where to clear arrayList 1/2
+            if(writeToOne){
                 one.add(new Scan(range_m, angle_rad, quality));
             }
 
-            if(!arrayMode){
+            if(!writeToOne){
                 two.add(new Scan(range_m, angle_rad, quality));
             }
 
         }
-        // don't need anymore
-        dataArrayList.clear();
     }
 
     @Override
@@ -147,29 +132,10 @@ public class Lidar extends DiagnosticsSubsystem {
                 // expected descriptor received, switch to read data
                 measureMode = true;
             }
+            else System.out.println("Lidar handshake error");
         }
         
         // TODO transform 3D
-        // loop until full scan data has been processed
-        //      poll until bytes available >= one entry
-        //         read one entry
-        //read()
-        //      parse one entry
-        //parse()
-        // if full scan has been complete (S = 1) -> switch to the other array
-        //  note that data response packets will stop if HW failure is detected
-
-        
-        // int bytestoread = serialPort.getBytesReceived();
-        // byte bytes[];
-
-        // if (bytestoread >= 9 ) {
-        //     bytes = serialPort.read(bytestoread);
-
-        //     parseData(bytes);
-        //     //request a new scan
-        //     //System.out.println(Arrays.toString(bytes));
-        //     serialPort.write(startCommand, startCommand.length);
         }
 
     @Override
