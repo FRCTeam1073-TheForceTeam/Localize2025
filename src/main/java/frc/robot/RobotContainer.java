@@ -14,12 +14,14 @@ import frc.robot.subsystems.AprilTagFinder;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.OI;
 import frc.robot.subsystems.SwerveModuleConfig;
+import frc.robot.subsystems.Lidar;
 
 public class RobotContainer 
 {
   private final Drivetrain m_drivetrain = new Drivetrain();
   private final OI m_OI = new OI();
   private final AprilTagFinder m_aprilTagFinder = new AprilTagFinder();
+  private final Lidar m_lidar = new Lidar();
 
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder);
 
