@@ -4,11 +4,15 @@
 
 package frc.robot;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -52,30 +56,45 @@ public class RobotContainer
 
   public void autonomousInit()
   {
+
     SmartDashboard.putString("Alliance", "None");
     if (m_aprilTagFinder != null)
     {
       if(DriverStation.getAlliance().isPresent())
       {
-        if (DriverStation.getAlliance().get() == Alliance.Blue)
+        if (DriverStation.getAlliance().get() == Alliance.Blue) //TODO: this should be one if statement (fix)
         {
+          Pose2d where = new Pose2d(3.6576, 4.0259, new Rotation2d(Math.PI)); //#ID 18
+          Pose2d there = new Pose2d(5, 4, new Rotation2d(Math.PI)); // #ID we made it up
+          ArrayList<Pose2d> hereAndThere = new ArrayList<Pose2d>();
+          hereAndThere.add(where);
+          hereAndThere.add(there);
+          Trajectory allOverThePlace = TrajectoryGenerator.generateTrajectory(
+                                    hereAndThere, 
+                                    new TrajectoryConfig(99, 99));
+          m_field.getObject("trajectory").setTrajectory(allOverThePlace);
           m_drivetrain.resetOdometry(where);
         }
-      }
-
-      if(DriverStation.getAlliance().isPresent())
-      {
-        if (DriverStation.getAlliance().get() == Alliance.Red)
+        else if (DriverStation.getAlliance().get() == Alliance.Red)
         {
           SmartDashboard.putString("Alliance", "Red");
           isRed = true;
+          Pose2d where = new Pose2d(13.890, 4.026, new Rotation2d(0)); //#ID 7
+          Pose2d there = new Pose2d(2, 4, new Rotation2d(Math.PI)); // #ID we made it up
+          ArrayList<Pose2d> hereAndThere = new ArrayList<Pose2d>();
+          hereAndThere.add(where);
+          hereAndThere.add(there);
+          Trajectory allOverThePlace = TrajectoryGenerator.generateTrajectory(
+                                    hereAndThere, 
+                                    new TrajectoryConfig(99, 99));
+          m_field.getObject("trajectory").setTrajectory(allOverThePlace);
           m_drivetrain.resetOdometry(where);
         }
         else
         {
-          SmartDashboard.putString("Alliance", "Blue");
+          SmartDashboard.putString("Alliance", "Null");
           isRed = false;
-          Pose2d where = new Pose2d(3.6576, 4.0259, new Rotation2d(0)); //#ID 18
+          Pose2d where = new Pose2d(0, 0, new Rotation2d(0));
           m_drivetrain.resetOdometry(where);
         }
       }
