@@ -6,6 +6,7 @@ import java.util.Arrays;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class Lidar extends DiagnosticsSubsystem {
     SerialPort serialPort = new SerialPort(1000000, SerialPort.Port.kUSB1, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
@@ -35,6 +36,8 @@ public class Lidar extends DiagnosticsSubsystem {
     ArrayList <Scan> two = new ArrayList<>();
 
     public Lidar () {
+        // before
+        serialPort.setWriteBufferMode(SerialPort.WriteBufferMode.kFlushOnAccess);
         super.setSubsystem("Lidar");
         serialPort.setFlowControl(SerialPort.FlowControl.kNone);
         System.out.println("Lidar constructor");
@@ -61,14 +64,18 @@ public class Lidar extends DiagnosticsSubsystem {
         //startCommand
         serialPort.write(startCommand, startCommand.length);
         System.out.println("Sent start command to Lidar sensor");
-        for(int i = 0; i < startCommand.length; i++){
-            System.out.println(String.format("0x%02x", startCommand[i]));
+        // wait loop, while getBytesReceived is less, sleep
+        while(serialPort.getBytesReceived() < 7){
+            new WaitCommand(0.5);
+            System.out.println(serialPort.getBytesReceived());
         }
+        
+        // TODO: look into serial port read
         // while(serialPort.getBytesReceived() == 0){
         //     System.out.println("Waiting for bytes from LiDAR");
         // }
         byte data[] = serialPort.read(serialPort.getBytesReceived());
-        System.out.println("Length of LiDAR sent from start command " + data.length);
+        System.out.println("Length of LiDAR response from start command " + data.length);
         for(int i = 0; i < data.length; i++){
             System.out.println(String.format("0x%02x", data[i]));
         }
