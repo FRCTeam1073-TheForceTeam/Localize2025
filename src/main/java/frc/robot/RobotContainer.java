@@ -56,7 +56,9 @@ public class RobotContainer
 
   public void autonomousInit()
   {
-
+    double centerY = 4.026;
+    double centerX = 8.774;
+    double startLineOffset = 12.227 -8.774 - 2.24;//id 10 x value - center x value - offset from reef to startline
     SmartDashboard.putString("Alliance", "None");
     if (m_aprilTagFinder != null)
     {
@@ -64,31 +66,33 @@ public class RobotContainer
       {
         if (DriverStation.getAlliance().get() == Alliance.Blue) //TODO: this should be one if statement (fix)
         {
-          Pose2d where = new Pose2d(3.6576, 4.0259, new Rotation2d(Math.PI)); //#ID 18
-          Pose2d there = new Pose2d(5, 4, new Rotation2d(Math.PI)); // #ID we made it up
+          Pose2d startPos = new Pose2d(centerX-startLineOffset, centerY, new Rotation2d(Math.PI)); //startline
+          Pose2d endPos = new Pose2d(5.321, 4.026, new Rotation2d(0)); // ID 21
           ArrayList<Pose2d> hereAndThere = new ArrayList<Pose2d>();
-          hereAndThere.add(where);
-          hereAndThere.add(there);
+          hereAndThere.add(startPos);
+          hereAndThere.add(endPos);
           Trajectory allOverThePlace = TrajectoryGenerator.generateTrajectory(
                                     hereAndThere, 
                                     new TrajectoryConfig(99, 99));
           m_field.getObject("trajectory").setTrajectory(allOverThePlace);
-          m_drivetrain.resetOdometry(where);
+          m_drivetrain.resetOdometry(endPos);
         }
         else if (DriverStation.getAlliance().get() == Alliance.Red)
         {
           SmartDashboard.putString("Alliance", "Red");
           isRed = true;
-          Pose2d where = new Pose2d(13.890, 4.026, new Rotation2d(0)); //#ID 7
-          Pose2d there = new Pose2d(2, 4, new Rotation2d(Math.PI)); // #ID we made it up
+          Pose2d startPos = new Pose2d(centerX + startLineOffset, centerY, new Rotation2d(Math.PI)); //start at start line
+          ///Pose2d there = new Pose2d(2, 4, new Rotation2d(Math.PI)); // #ID we made it up
+          //Pose2d endPos = new Pose2d(12.227, 4.026, new Rotation2d(Math.PI)); // ID 10
+          Pose2d endPos = new Pose2d(12, 4.03, new Rotation2d(Math.PI)); // close to ID 10 but decimals to the thousandth place cause an error for some reason
           ArrayList<Pose2d> hereAndThere = new ArrayList<Pose2d>();
-          hereAndThere.add(where);
-          hereAndThere.add(there);
+          hereAndThere.add(startPos);
+          hereAndThere.add(endPos);
           Trajectory allOverThePlace = TrajectoryGenerator.generateTrajectory(
                                     hereAndThere, 
                                     new TrajectoryConfig(99, 99));
           m_field.getObject("trajectory").setTrajectory(allOverThePlace);
-          m_drivetrain.resetOdometry(where);
+          m_drivetrain.resetOdometry(endPos);
         }
         else
         {
