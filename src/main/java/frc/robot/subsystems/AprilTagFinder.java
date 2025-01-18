@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import java.util.ArrayList;
 import java.util.List;
 
+//Import Photon Vision libraries
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -16,20 +17,25 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class AprilTagFinder extends SubsystemBase {
+
+  //defines camera and creates tag lists for each camera
   public PhotonCamera frontLeftCam = new PhotonCamera("LeftCamera");
   public PhotonCamera frontRightCam = new PhotonCamera("Arducam_OV9281_USB_Camera");
   List<PhotonTrackedTarget> responseFL;
   List<PhotonTrackedTarget> responseFR;
-
+  
   public int wait_counter = 0;
 
   public List<List<PhotonTrackedTarget>> getCurrentTagData() {
+
+    //create a list of all the tags and add camera results to it
     List<List<PhotonTrackedTarget>> result = new ArrayList<>();
     result.add(responseFL);
     result.add(responseFR);
     return result;
   }
 
+  //Right and Left Cam get Targets
   public void readTagData() {
     responseFL = frontLeftCam.getLatestResult().getTargets();
     responseFR = frontRightCam.getLatestResult().getTargets();
