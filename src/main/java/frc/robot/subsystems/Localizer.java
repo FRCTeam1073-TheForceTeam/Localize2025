@@ -1,18 +1,26 @@
 // LOCALIZER: accesses drivetrain for odometry and AprilTagFinder for vision measurements
 
 package frc.robot.subsystems;
+import java.lang.reflect.Member;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.AprilTagFinder.VisionMeasurement;
 public class Localizer extends SubsystemBase
 {
     private Drivetrain driveTrain;
@@ -20,6 +28,10 @@ public class Localizer extends SubsystemBase
     private FieldMap fieldMap;
     private AprilTagFinder finder;
     private double lastUpdateTime;
+    private SwerveDriveKinematics kinematics;
+    private SwerveModulePosition[] swerveModulePositions;
+    private Matrix<N3, N1> measurementStdDev;
+
     //added a set transform from sensor to center of the robot to the sensor and can have multiple as needed
     private final Transform3d sensorTransform = new Transform3d();
     public Localizer(Drivetrain driveTrain, FieldMap fieldMap, AprilTagFinder finder)
@@ -27,17 +39,24 @@ public class Localizer extends SubsystemBase
         this.driveTrain = driveTrain;
         this.fieldMap = fieldMap;
         this.finder = finder;
+        this.kinematics = driveTrain.getKinematics();
+        this.swerveModulePositions = driveTrain.getSwerveModulePositions();
+
         estimator = new SwerveDrivePoseEstimator(
-            driveTrain.getKinematics(), driveTrain.getOdometry().getRotation(), driveTrain.getSwerveModulePositions(), new Pose2d()
+            kinematics, driveTrain.getOdometry().getRotation(), swerveModulePositions, new Pose2d()
         );
         lastUpdateTime = Timer.getFPGATimestamp();
+    }
+
+    public void resetPos(Pose2d newPos) {
+        estimator.resetPose(newPos);
     }
     
     @Override
     public void periodic()
     {
         double now = Timer.getFPGATimestamp();
-        estimator.updateWithTime(now, driveTrain.getOdometry().getRotation(), driveTrain.getSwerveModulePositions());
+        estimator.updateWithTime(now, driveTrain.getOdometry().getRotation(), swerveModulePositions);
         /*
          * if (have a new sensor measurement && it is valid)
          * {
@@ -48,45 +67,23 @@ public class Localizer extends SubsystemBase
         // only run sensor update if we've moved enough and a few seconds have passed
         if (now - lastUpdateTime > 1.0)
         {
-            // //ArrayList<AprilTag> tags = /*finder.getTags();*/ null; // TODO: fix this
-            // this.response = camera.getLatestResult();  
-            // List<PhotonTrackedTarget> targets = response.getTargets();
+            ArrayList<AprilTagFinder.VisionMeasurement> measurements = finder.getMeasurements();
 
-            // for (int i = 0; i < tags.size(); i++)
-            // {
-            //     /*
-            //     * if (tag is "good")
-            //     * {
-            //     *      get the pose3d of the tag relative to the robot
-            //     *      find the landmark in the map
-            //     *      if (we get the landmark)
-            //     *      {
-            //     *          apply this as an inverse transform to find the robot's position
-            //     *      }
-            //     * }
-            //     */
-            //     Pose3d apriltagPose = map.getApriltagLandmark(tags.get(i).ID);
-            //     if (apriltagPose != null)
-            //     {
-            //         //transform of the tag to robot
-            //         Transform3d transform = new Transform3d(new Pose3d(), tags.get(i).pose);
-            //         Pose3d measurement = apriltagPose.transformBy(transform);
-            //         Pose2d measurement2d = new Pose2d(
-            //             new Translation2d(measurement.getX(), measurement.getY()), 
-            //             new Rotation2d(measurement.getRotation().getAngle())
-            //         );
-            //         estimator.addVisionMeasurement(measurement2d, now);
-            //     }
-            // }
+            for(int index = 0; index < measurements.size(); index++) {
+                VisionMeasurement currentMeasurement = measurements.get(index);
+                //TODO: compute terms based on range to target
+                measurementStdDev.set(0, 0, 0.5); //x standard deviation
+                measurementStdDev.set(1, 0, 0.5); //y standard deviation
+                measurementStdDev.set(2, 0, 0.5); //angle standard deviation
+                
+                estimator.addVisionMeasurement(currentMeasurement.pose, currentMeasurement.timeStamp);
+            }
             lastUpdateTime = now;
         }
-        //m_field.setRobotPose(m_odometry.getPoseMeters()); //maybe this should be a command
-
     }
-    public Pose2d getOdometry()
+    public Pose2d getPose()
     {
-        // TODO: actually implement this
-        return new Pose2d();
+        return estimator.getEstimatedPosition();
     }
     public void additionalSensorMeasurement(int id, FieldMap fieldMap)
     {
