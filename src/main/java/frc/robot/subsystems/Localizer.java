@@ -8,6 +8,8 @@ import java.util.List;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -19,6 +21,7 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.AprilTagFinder.VisionMeasurement;
 public class Localizer extends SubsystemBase
@@ -30,7 +33,8 @@ public class Localizer extends SubsystemBase
     private double lastUpdateTime;
     private SwerveDriveKinematics kinematics;
     private SwerveModulePosition[] swerveModulePositions;
-    private Matrix<N3, N1> measurementStdDev;
+    private Matrix<N3, N1> measurementStdDev = VecBuilder.fill(0.5, 0.5, 0.5); //this actual creates the 3 by 1 matrix
+    private int measurementCounter = 0;
 
     //added a set transform from sensor to center of the robot to the sensor and can have multiple as needed
     private final Transform3d sensorTransform = new Transform3d();
@@ -75,10 +79,12 @@ public class Localizer extends SubsystemBase
                 measurementStdDev.set(0, 0, 0.5); //x standard deviation
                 measurementStdDev.set(1, 0, 0.5); //y standard deviation
                 measurementStdDev.set(2, 0, 0.5); //angle standard deviation
-                
+
                 estimator.addVisionMeasurement(currentMeasurement.pose, currentMeasurement.timeStamp);
+                measurementCounter++;
             }
             lastUpdateTime = now;
+            SmartDashboard.putNumber("Localize Measurements", measurementCounter);
         }
     }
     public Pose2d getPose()
