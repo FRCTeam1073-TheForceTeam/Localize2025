@@ -76,9 +76,17 @@ public class Localizer extends SubsystemBase
             for(int index = 0; index < measurements.size(); index++) {
                 VisionMeasurement currentMeasurement = measurements.get(index);
                 //TODO: compute terms based on range to target
-                measurementStdDev.set(0, 0, 0.5); //x standard deviation
-                measurementStdDev.set(1, 0, 0.5); //y standard deviation
-                measurementStdDev.set(2, 0, 0.5); //angle standard deviation
+                double StdDevX = 0.5;
+                double StdDevY = 0.5;
+                double StdDevA = 0.5;   
+
+                SmartDashboard.putNumber("StdDev X", StdDevX);
+                SmartDashboard.putNumber("StdDev Y", StdDevY);
+                SmartDashboard.putNumber("StdDev Angle", StdDevA);
+
+                measurementStdDev.set(0, 0, StdDevX); //x standard deviation
+                measurementStdDev.set(1, 0, StdDevY); //y standard deviation
+                measurementStdDev.set(2, 0, StdDevA); //angle standard deviation
 
                 estimator.addVisionMeasurement(currentMeasurement.pose, currentMeasurement.timeStamp);
                 measurementCounter++;

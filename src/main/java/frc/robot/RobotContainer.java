@@ -170,7 +170,18 @@ public class RobotContainer
   }
 
   public void disabledInit() {
-    double centerY = 4.026;
+    double centerY;
+    String selectedAuto = m_positionChooser.getSelected();
+    if (selectedAuto.equals(leftAuto)) {
+      centerY = 6.029;
+    }
+    else if(selectedAuto.equals(rightAuto)) {
+      centerY = 2.013;
+    }
+    else{
+      centerY = 4.026;
+    }
+    
     double centerX = 8.774;
     double startLineOffset = 12.227 -8.774 - 2.24; //id 10 x value - center x value - offset from reef to startline
     Pose2d startPos = new Pose2d();
