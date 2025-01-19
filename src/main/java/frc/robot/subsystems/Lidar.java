@@ -9,8 +9,9 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class Lidar extends DiagnosticsSubsystem {
-    SerialPort serialPort = new SerialPort(1000000, SerialPort.Port.kUSB1, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
-    byte startCommand[] = {(byte) 0xa5, 0x20};
+    SerialPort serialPort = new SerialPort(460800, SerialPort.Port.kUSB1, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
+    byte startCommand[] = {(byte) 0xa5, (byte) 0x20};
+    byte getInfo[] = {(byte) 0xa5, (byte) 0x52};
     boolean measureMode = false;
     boolean writeToOne = false;
     private final int bytesPerScan = 5;
@@ -48,10 +49,10 @@ public class Lidar extends DiagnosticsSubsystem {
         System.out.println("Beginning of handshake method for Lidar sensor");
         byte StopCommand[] = new byte[2];
         StopCommand[0] = (byte) 0xa5;
-        StopCommand[1] = 0x25;
+        StopCommand[1] = (byte) 0x25;
 
         //send stop
-        serialPort.write(StopCommand, StopCommand.length);
+        //serialPort.write(StopCommand, StopCommand.length);
         try {
             Thread.sleep(50);
         }
@@ -66,7 +67,12 @@ public class Lidar extends DiagnosticsSubsystem {
         System.out.println("Sent start command to Lidar sensor");
         // wait loop, while getBytesReceived is less, sleep
         while(serialPort.getBytesReceived() < 7){
-            new WaitCommand(0.5);
+            try {
+                Thread.sleep(50);
+            }
+            catch (Exception e) {
+                System.out.println(e);
+            }
             System.out.println(serialPort.getBytesReceived());
         }
         
