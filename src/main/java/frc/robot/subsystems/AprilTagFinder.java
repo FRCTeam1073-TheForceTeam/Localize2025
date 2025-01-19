@@ -45,8 +45,8 @@ public class AprilTagFinder extends SubsystemBase
   public PhotonCamera frontLeftCam = new PhotonCamera("FrontLeftCamera");
   public PhotonCamera frontRightCam = new PhotonCamera("FrontRightCamera");
   //Camera height: 0.2159m, x and y: 0.264m
-  public final Transform3d fLCamTransform3d = new Transform3d(new Translation3d(-0.264,0.264, 0.2159), new Rotation3d(0, 28.125, 30));
-  public final Transform3d fRCamTransform3d = new Transform3d(new Translation3d(0.264, 0.264, 0.2159), new Rotation3d(0, 28.125, -30));
+  public final Transform3d fLCamTransform3d = new Transform3d(new Translation3d(0.264,0.264, 0.2159), new Rotation3d(0, 0, (Math.PI) / 4));  // front left has the new mount
+  public final Transform3d fRCamTransform3d = new Transform3d(new Translation3d(0.264, -0.264, 0.2159), new Rotation3d(0, 28.125, -30));
   public final Transform3d bLCamTransform3d = new Transform3d(new Translation3d(-0264, -0.264, 0.2159), new Rotation3d(0, 28.125, 30));
   public final Transform3d bRCamTransform3d = new Transform3d(new Translation3d(0.264, -0.264, 0.2159), new Rotation3d(0, 28.125, -30));
   List<PhotonTrackedTarget> responseFL;
@@ -102,7 +102,7 @@ public class AprilTagFinder extends SubsystemBase
     {
       Pose3d robotPoseFL = PhotonUtils.estimateFieldToRobotAprilTag(targetFL.getBestCameraToTarget(),
                                                                       FieldMap.fieldMap.getTagPose(targetFL.getFiducialId()).get(), 
-                                                                      fLCamTransform3d);
+                                                                      fLCamTransform3d.inverse());
       range = targetFL.bestCameraToTarget.getTranslation().getNorm();
       measurements.add(new VisionMeasurement(robotPoseFL.toPose2d(), responseFLTimestamp, targetFL.getFiducialId(), range));
     }
@@ -113,7 +113,7 @@ public class AprilTagFinder extends SubsystemBase
     {
       Pose3d robotPoseFR = PhotonUtils.estimateFieldToRobotAprilTag(targetFR.getBestCameraToTarget(),
                                                                       FieldMap.fieldMap.getTagPose(targetFR.getFiducialId()).get(), 
-                                                                      fRCamTransform3d);
+                                                                      fRCamTransform3d.inverse());
       range = targetFR.bestCameraToTarget.getTranslation().getNorm();
       measurements.add(new VisionMeasurement(robotPoseFR.toPose2d(), responseFRTimestamp, targetFR.getFiducialId(), range));
     }

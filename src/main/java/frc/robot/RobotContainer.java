@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import java.lang.module.ModuleDescriptor.Builder;
 //import java.lang.runtime.SwitchBootstraps;
 import java.util.ArrayList;
 import java.util.Map;
@@ -14,6 +15,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -73,6 +75,7 @@ public class RobotContainer
     SmartDashboard.putData(m_drivetrain);
     SmartDashboard.putData(m_OI);
     SmartDashboard.putData("Field", m_field);
+    SmartDashboard.putData(m_localizer);
 
     m_positionChooser.setDefaultOption("No Position", noPositionAuto);
     m_positionChooser.addOption("Right Auto", rightAuto);
@@ -171,7 +174,7 @@ public class RobotContainer
 
   public void disabledInit() {
     double centerY;
-    String selectedAuto = m_positionChooser.getSelected();
+    String selectedAuto = m_positionChooser.getSelected(); //TODO: make dependent on alliance
     if (selectedAuto.equals(leftAuto)) {
       centerY = 6.029;
     }

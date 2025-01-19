@@ -20,10 +20,13 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.AprilTagFinder.VisionMeasurement;
+import edu.wpi.first.util.sendable.SendableBuilder;
+
 public class Localizer extends SubsystemBase
 {
     private Drivetrain driveTrain;
@@ -35,6 +38,10 @@ public class Localizer extends SubsystemBase
     private SwerveModulePosition[] swerveModulePositions;
     private Matrix<N3, N1> measurementStdDev = VecBuilder.fill(0.5, 0.5, 0.5); //this actual creates the 3 by 1 matrix
     private int measurementCounter = 0;
+    private double StdDevX = 0.5;
+    private double StdDevY = 0.5;
+    private double StdDevA = 0.5;
+    private double timeGap = 1.0;
 
     //added a set transform from sensor to center of the robot to the sensor and can have multiple as needed
     private final Transform3d sensorTransform = new Transform3d();
@@ -50,6 +57,47 @@ public class Localizer extends SubsystemBase
             kinematics, driveTrain.getOdometry().getRotation(), swerveModulePositions, new Pose2d()
         );
         lastUpdateTime = Timer.getFPGATimestamp();
+    }
+
+    @Override
+    public void initSendable(SendableBuilder builder) {
+        builder.setSmartDashboardType("Localizer");
+        builder.addDoubleProperty("StdDev X", this::getStdDevX, this::setStdDevX);
+        builder.addDoubleProperty("StdDev Y", this::getStdDevY, this::setStdDevY);
+        builder.addDoubleProperty("StdDev Angle", this::getStdDevA, this::setStdDevA);
+        builder.addDoubleProperty("Time between updates", this::getTime, this::setTime);
+    }
+
+    public double getTime() {
+        return StdDevX;
+    }
+
+    public void setTime(double time) {
+        timeGap = time;
+    }
+    
+    public double getStdDevX() {
+        return StdDevX;
+    }
+
+    public void setStdDevX(double newX) {
+        StdDevX = newX;
+    }
+
+    public double getStdDevY() {
+        return StdDevY;
+    }
+
+    public void setStdDevY(double newY) {
+        StdDevX = newY;
+    }
+
+    public double getStdDevA() {
+        return StdDevA;
+    }
+
+    public void setStdDevA(double newA) {
+        StdDevX = newA;
     }
 
     public void resetPos(Pose2d newPos) {
@@ -69,21 +117,13 @@ public class Localizer extends SubsystemBase
          * }
          */
         // only run sensor update if we've moved enough and a few seconds have passed
-        if (now - lastUpdateTime > 1.0)
+        if (now - lastUpdateTime > timeGap)
         {
             ArrayList<AprilTagFinder.VisionMeasurement> measurements = finder.getMeasurements();
 
             for(int index = 0; index < measurements.size(); index++) {
                 VisionMeasurement currentMeasurement = measurements.get(index);
-                //TODO: compute terms based on range to target
-                double StdDevX = 0.5;
-                double StdDevY = 0.5;
-                double StdDevA = 0.5;   
-
-                SmartDashboard.putNumber("StdDev X", StdDevX);
-                SmartDashboard.putNumber("StdDev Y", StdDevY);
-                SmartDashboard.putNumber("StdDev Angle", StdDevA);
-
+                //TODO: compute terms based on range to target  
                 measurementStdDev.set(0, 0, StdDevX); //x standard deviation
                 measurementStdDev.set(1, 0, StdDevY); //y standard deviation
                 measurementStdDev.set(2, 0, StdDevA); //angle standard deviation
