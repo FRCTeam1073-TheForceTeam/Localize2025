@@ -173,17 +173,9 @@ public class RobotContainer
   }
 
   public void disabledInit() {
-    double centerY;
+    double centerY = 4.026;
+    int sign = 1;
     String selectedAuto = m_positionChooser.getSelected(); //TODO: make dependent on alliance
-    if (selectedAuto.equals(leftAuto)) {
-      centerY = 6.029;
-    }
-    else if(selectedAuto.equals(rightAuto)) {
-      centerY = 2.013;
-    }
-    else{
-      centerY = 4.026;
-    }
     
     double centerX = 8.774;
     double startLineOffset = 12.227 -8.774 - 2.24; //id 10 x value - center x value - offset from reef to startline
@@ -192,13 +184,24 @@ public class RobotContainer
 
     if(DriverStation.getAlliance().isPresent())
     {
-      if (DriverStation.getAlliance().get() == Alliance.Blue)
+      DriverStation.Alliance alliance = DriverStation.getAlliance().get();
+      if(alliance == Alliance.Blue) {
+        sign = -1;
+      }
+      if (selectedAuto.equals(leftAuto)) {
+        centerY += sign * 2.013;
+      }
+      else if(selectedAuto.equals(rightAuto)) {
+        centerY -= sign * 2.013;
+      }
+
+      if (alliance == Alliance.Blue)
       {
         isRed = false;
         SmartDashboard.putString("Alliance", "Blue");
         startPos = new Pose2d(centerX-startLineOffset, centerY, new Rotation2d(Math.PI)); //startline
       }
-      else if (DriverStation.getAlliance().get() == Alliance.Red)
+      else if (alliance == Alliance.Red)
       {
         SmartDashboard.putString("Alliance", "Red");
         isRed = true;
