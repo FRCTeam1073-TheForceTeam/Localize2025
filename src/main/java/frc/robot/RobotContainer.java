@@ -175,7 +175,7 @@ public class RobotContainer
   public void disabledInit() {
     double centerY = 4.026;
     int sign = 1;
-    String selectedAuto = m_positionChooser.getSelected(); //TODO: make dependent on alliance
+    String selectedAuto = m_positionChooser.getSelected();
     
     double centerX = 8.774;
     double startLineOffset = 12.227 -8.774 - 2.24; //id 10 x value - center x value - offset from reef to startline
