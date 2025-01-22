@@ -29,6 +29,7 @@ public class MapDisplay extends SubsystemBase{
     { 
         field.setRobotPose(localizer.getPose());
         SmartDashboard.putData("Field", field); //the widget for this is the dropdown named "field"
-        //TODO: put robot localizer position
+        //https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/wpilibj/smartdashboard/Field2d.html
+        //use above to link to look into two robot poses: 1 odometry, 1 localize
     }
 }
