@@ -121,6 +121,50 @@ public class AprilTagFinder extends SubsystemBase
     return measurements;
   }
 
+  // TODO: untested
+  public ArrayList<VisionMeasurement> getAllGoodMeasurements() 
+  {
+    ArrayList<VisionMeasurement> measurements = new ArrayList<VisionMeasurement>();
+    double range = 0;
+
+    // front left camera
+    ArrayList<PhotonTrackedTarget> targetsFL = new ArrayList<>(frontLeftCam.getLatestResult().getTargets());
+    for (int i = 0; i < targetsFL.size(); i++)
+    {
+      if (targetsFL.get(i) != null && 
+          FieldMap.fieldMap.getTagPose(targetsFL.get(i).getFiducialId()).isPresent() &&
+          targetsFL.get(i).getPoseAmbiguity() < 0.2 && // TODO: verify this number
+          targetsFL.get(i).getPoseAmbiguity() != -1) 
+      {
+        Pose3d robotPoseFL = PhotonUtils.estimateFieldToRobotAprilTag(targetsFL.get(i).getBestCameraToTarget(),
+                                                            FieldMap.fieldMap.getTagPose(targetsFL.get(i).getFiducialId()).get(), 
+                                                            fLCamTransform3d.inverse());
+        range = targetsFL.get(i).bestCameraToTarget.getTranslation().getNorm();
+        measurements.add(new VisionMeasurement(robotPoseFL.toPose2d(), responseFLTimestamp, targetsFL.get(i).getFiducialId(), range));
+      }
+    }
+    
+    
+    // front right camera
+    ArrayList<PhotonTrackedTarget> targetsFR = new ArrayList<>(frontRightCam.getLatestResult().getTargets());
+    for (int i = 0; i < targetsFR.size(); i++)
+    {
+      if (targetsFR.get(i) != null && 
+          FieldMap.fieldMap.getTagPose(targetsFR.get(i).getFiducialId()).isPresent() &&
+          targetsFR.get(i).getPoseAmbiguity() < 0.2 && // TODO: verify this number
+          targetsFR.get(i).getPoseAmbiguity() != -1) 
+      {
+        Pose3d robotPoseFR = PhotonUtils.estimateFieldToRobotAprilTag(targetsFR.get(i).getBestCameraToTarget(),
+                                                            FieldMap.fieldMap.getTagPose(targetsFR.get(i).getFiducialId()).get(), 
+                                                            fLCamTransform3d.inverse());
+        range = targetsFR.get(i).bestCameraToTarget.getTranslation().getNorm();
+        measurements.add(new VisionMeasurement(robotPoseFR.toPose2d(), responseFRTimestamp, targetsFR.get(i).getFiducialId(), range));
+      }
+    }
+
+    return measurements;
+  }
+
   @Override
   public void periodic() { 
     readTagData();  
