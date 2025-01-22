@@ -1,40 +1,38 @@
 package frc.robot.subsystems;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class Lidar extends DiagnosticsSubsystem {
     SerialPort serialPort = new SerialPort(460800, SerialPort.Port.kUSB1, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
-    byte startCommand[] = {(byte) 0xa5, (byte) 0x20};
-    byte getInfo[] = {(byte) 0xa5, (byte) 0x52};
-    boolean measureMode = false;
-    boolean writeToOne = false;
     private final int bytesPerScan = 5;
-    int numScansRead;
-    int numBytesAvail = 0;
-    int numScansToRead;
-    int offset;
-    int rawDataByte;
-    float quality;
-    float range_mm;
-    float angle_deg;
-    float range_m;
-    float angle_rad;
+    //private final double elevationFactor = 0.94293; //0.97237; //compensating for the fact that it's not level: cos(angle of rangeFinder)
+    ArrayList <Scan> one = new ArrayList<>();
+    ArrayList <Scan> two = new ArrayList<>();
+    byte getInfo[] = {(byte) 0xa5, (byte) 0x52};
+    byte scanDescriptor[] = {(byte) 0xa5, (byte) 0x5a, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x81};
+    byte stopCommand[] = {(byte) 0xa5, (byte) 0x25};
+    byte startCommand[] = {(byte) 0xa5, (byte) 0x20};
+    boolean measureMode = false;
+    boolean writeToOne = true;
     double arrayOneTimestamp;
     double arrayTwoTimestamp;
-    byte scanDescriptor[] = {(byte) 0x5A, (byte) 0xA5, (byte) 0x05, 0x00, 0x00, 0x40, (byte) 0x81};
-    //private final double elevationFactor = 0.94293; //0.97237; //compensating for the fact that it's not level: cos(angle of rangeFinder)
-
     double filtered_range = 0.0;
     double intensity = 0.0; // starts to die at under 0.005
     double timestamp = 0.0;
-    ArrayList <Scan> one = new ArrayList<>();
-    ArrayList <Scan> two = new ArrayList<>();
+    float angle_deg;
+    float angle_rad;
+    float quality;
+    float range_m;
+    float range_mm;
+    int numBytesAvail = 0;
+    int numScansRead;
+    int numScansToRead;
+    int offset;
+    int rawDataByte;
 
     public Lidar () {
         // before
@@ -47,12 +45,9 @@ public class Lidar extends DiagnosticsSubsystem {
 
     public void Handshake () {
         System.out.println("Beginning of handshake method for Lidar sensor");
-        byte StopCommand[] = new byte[2];
-        StopCommand[0] = (byte) 0xa5;
-        StopCommand[1] = (byte) 0x25;
 
         //send stop
-        //serialPort.write(StopCommand, StopCommand.length);
+        serialPort.write(stopCommand, stopCommand.length);
         try {
             Thread.sleep(50);
         }
@@ -73,18 +68,10 @@ public class Lidar extends DiagnosticsSubsystem {
             catch (Exception e) {
                 System.out.println(e);
             }
-            System.out.println(serialPort.getBytesReceived());
+            //System.out.println(serialPort.getBytesReceived());
         }
         
         // TODO: look into serial port read
-        // while(serialPort.getBytesReceived() == 0){
-        //     System.out.println("Waiting for bytes from LiDAR");
-        // }
-        byte data[] = serialPort.read(serialPort.getBytesReceived());
-        System.out.println("Length of LiDAR response from start command " + data.length);
-        for(int i = 0; i < data.length; i++){
-            System.out.println(String.format("0x%02x", data[i]));
-        }
         // How to print out hex in java - String.format("0x%02x", what you're printing out)
 
     }
@@ -107,36 +94,39 @@ public class Lidar extends DiagnosticsSubsystem {
     public boolean parseDescriptor(){
         System.out.println("Parsing lidar scan descriptor");
         byte [] received = serialPort.read(7);
+        System.out.println("Scan descriptor received from serialPort");
+        for(int i = 0; i < received.length; i++){
+            System.out.println(String.format("0x%02x", received[i]));
+        }
         return Arrays.equals(received, scanDescriptor);
     }
 
     // what is most efficient?
     public void readAndParseMeasurements(int numAvail){
         // TODO: promote byte to an int - do something to make it from 0 to 255 - look through old rangefinder for converting values
-        //put data into scan class - return array list of scan object to add to arrayList?
+
         // round down to determine number of full scans available
         numScansToRead = numAvail/bytesPerScan;
         byte[] rawData = serialPort.read(numScansToRead * bytesPerScan);
-        // TODO: clockwise is positive - opposite for robot - convert to radians
+        // TODO: clockwise is positive - opposite for robot
         for(int i = 0; i < numScansToRead; i ++){
             offset = i * bytesPerScan;
            if((rawData[0] & 0x01) == 1){
-                // TODO: Write timestamp when switch
                 System.out.println("Switching LiDAR arrays");
                 if(writeToOne) {
-                    //done writing to one, switching to writing to two
+                    //done writing to one, switching to writing to two - sets the timestamp for array two
                     two.clear();
                     arrayTwoTimestamp = Timer.getFPGATimestamp();
                 }
 
                 else {
-                    //done writing to two, switching to writing to one
+                    //done writing to two, switching to writing to one - sets the timestamp for array one
                     one.clear();
                     arrayOneTimestamp = Timer.getFPGATimestamp();
                 }
                 writeToOne = !writeToOne;
             } 
-            // divide by 4 because to drop the lower two bits
+            // divide by 4 to drop the lower two bits
             quality = (rawData[offset + 0] & 0xFF) / 4;
             // angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
             angle_deg = -128 * (rawData[(offset) + 2] & 0xFF) + ((rawData[offset + 1] & 0xFF)/ 2);
@@ -162,14 +152,16 @@ public class Lidar extends DiagnosticsSubsystem {
             readAndParseMeasurements(numBytesAvail);
         }
 
-        if(numBytesAvail >= 7){
+        if(numBytesAvail >= 7 && !measureMode){
             // read and check the first 7 bytes of response
             if(parseDescriptor()){
                 // expected descriptor received, switch to read data
                 measureMode = true;
                 System.out.println("Started Lidar measurement mode");
             }
-            else System.out.println("Lidar handshake error");
+            else{
+                System.out.println("Lidar handshake error");
+            }
         }
         
         // TODO transform 3D
