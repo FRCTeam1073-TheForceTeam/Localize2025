@@ -189,10 +189,10 @@ public class RobotContainer
         sign = -1;
       }
       if (selectedAuto.equals(leftAuto)) {
-        centerY += sign * 2.013;
+        centerY -= sign * 2.013;
       }
       else if(selectedAuto.equals(rightAuto)) {
-        centerY -= sign * 2.013;
+        centerY += sign * 2.013;
       }
 
       if (alliance == Alliance.Blue)
