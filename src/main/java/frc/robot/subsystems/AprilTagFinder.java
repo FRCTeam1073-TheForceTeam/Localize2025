@@ -59,6 +59,8 @@ public class AprilTagFinder extends SubsystemBase
   double responseBLTimestamp;
   double responseBRTimestamp;
 
+  double ambiguityThreshold = 0.2; // TODO: verify this number
+
 
   public int wait_counter = 0;
 
@@ -121,8 +123,8 @@ public class AprilTagFinder extends SubsystemBase
     return measurements;
   }
 
-  // TODO: untested
-  public ArrayList<VisionMeasurement> getAllGoodMeasurements() 
+  
+  public ArrayList<VisionMeasurement> getAllGoodMeasurements() // TODO: untested
   {
     ArrayList<VisionMeasurement> measurements = new ArrayList<VisionMeasurement>();
     double range = 0;
@@ -133,7 +135,7 @@ public class AprilTagFinder extends SubsystemBase
     {
       if (targetsFL.get(i) != null && 
           FieldMap.fieldMap.getTagPose(targetsFL.get(i).getFiducialId()).isPresent() &&
-          targetsFL.get(i).getPoseAmbiguity() < 0.2 && // TODO: verify this number
+          targetsFL.get(i).getPoseAmbiguity() < ambiguityThreshold && 
           targetsFL.get(i).getPoseAmbiguity() != -1) 
       {
         Pose3d robotPoseFL = PhotonUtils.estimateFieldToRobotAprilTag(targetsFL.get(i).getBestCameraToTarget(),
@@ -151,7 +153,7 @@ public class AprilTagFinder extends SubsystemBase
     {
       if (targetsFR.get(i) != null && 
           FieldMap.fieldMap.getTagPose(targetsFR.get(i).getFiducialId()).isPresent() &&
-          targetsFR.get(i).getPoseAmbiguity() < 0.2 && // TODO: verify this number
+          targetsFR.get(i).getPoseAmbiguity() < ambiguityThreshold && 
           targetsFR.get(i).getPoseAmbiguity() != -1) 
       {
         Pose3d robotPoseFR = PhotonUtils.estimateFieldToRobotAprilTag(targetsFR.get(i).getBestCameraToTarget(),

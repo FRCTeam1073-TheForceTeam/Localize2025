@@ -42,6 +42,8 @@ public class Localizer extends SubsystemBase
     private double StdDevY = 0.5;
     private double StdDevA = 0.5;
     private double timeGap = 1.0;
+    private double linearSpeedThreshold = 2.5; // TODO: get actual numbers here
+    private double angularSpeedThreshold = 1.5; // TODO: get actual numbers here
 
     //added a set transform from sensor to center of the robot to the sensor and can have multiple as needed
     private final Transform3d sensorTransform = new Transform3d();
@@ -117,28 +119,29 @@ public class Localizer extends SubsystemBase
          * }
          */
         // only run sensor update if we've moved enough and a few seconds have passed
-        if (now - lastUpdateTime > timeGap)
+        if (now - lastUpdateTime > timeGap && measurementStable())
         {
             ArrayList<AprilTagFinder.VisionMeasurement> measurements = finder.getMeasurements();
 
-            for(int index = 0; index < measurements.size(); index++) {
+            for(int index = 0; index < measurements.size(); index++) 
+            {
                 VisionMeasurement currentMeasurement = measurements.get(index);
                 //TODO: compute terms based on range to target  
-                measurementStdDev.set(0, 0, StdDevX); //x standard deviation
-                measurementStdDev.set(1, 0, StdDevY); //y standard deviation
-                measurementStdDev.set(2, 0, StdDevA); //angle standard deviation
+                updateStdDevs(currentMeasurement);
 
-                estimator.addVisionMeasurement(currentMeasurement.pose, currentMeasurement.timeStamp);
+                estimator.addVisionMeasurement(currentMeasurement.pose, currentMeasurement.timeStamp, measurementStdDev);
                 measurementCounter++;
             }
             lastUpdateTime = now;
             SmartDashboard.putNumber("Localize Measurements", measurementCounter);
         }
     }
+
     public Pose2d getPose()
     {
         return estimator.getEstimatedPosition();
     }
+
     public void additionalSensorMeasurement(int id, FieldMap fieldMap)
     {
         // TODO:
@@ -155,5 +158,27 @@ public class Localizer extends SubsystemBase
         //     new Rotation2d(measurement.getRotation().getAngle()) 
         // );
         // estimator.addVisionMeasurement(measurement2d, Timer.getFPGATimestamp());
+    }
+
+    private boolean measurementStable()
+    {
+        double linearSpeed = Math.sqrt(Math.pow(driveTrain.getChassisSpeeds().vxMetersPerSecond, 2) + 
+                                    Math.pow(driveTrain.getChassisSpeeds().vxMetersPerSecond, 2));
+        double angularSpeed = Math.abs(driveTrain.getChassisSpeeds().omegaRadiansPerSecond);
+        if (linearSpeed <= linearSpeedThreshold && angularSpeed <= angularSpeedThreshold)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    private void updateStdDevs(AprilTagFinder.VisionMeasurement measurement)
+    {
+        measurementStdDev.set(0, 0, StdDevX + 0.1 * measurement.range); //x standard deviation
+        measurementStdDev.set(1, 0, StdDevY + 0.1 * measurement.range); //y standard deviation
+        measurementStdDev.set(2, 0, StdDevA + 0.1 * measurement.range); //angle standard deviation
     }
 }
