@@ -68,6 +68,8 @@ public class Localizer extends SubsystemBase
         builder.addDoubleProperty("StdDev Y", this::getStdDevY, this::setStdDevY);
         builder.addDoubleProperty("StdDev Angle", this::getStdDevA, this::setStdDevA);
         builder.addDoubleProperty("Time between updates", this::getTime, this::setTime);
+        builder.addDoubleProperty("Linear Speed Thres", this::getLinearSpeed, this::setLinearSpeed);
+        builder.addDoubleProperty("Angular Speed Thres", this::getAngularSpeed, this::setAngularSpeed);
     }
 
     public double getTime() {
@@ -104,6 +106,22 @@ public class Localizer extends SubsystemBase
 
     public void resetPos(Pose2d newPos) {
         estimator.resetPose(newPos);
+    }
+
+    public double getLinearSpeed() {
+        return linearSpeedThreshold;
+    }
+
+    public void setLinearSpeed(double speed) {
+        linearSpeedThreshold = speed;
+    }
+
+    public double getAngularSpeed() {
+        return angularSpeedThreshold;
+    }
+
+    public void setAngularSpeed(double angularSpeed) {
+        angularSpeedThreshold = angularSpeed;
     }
 
     
