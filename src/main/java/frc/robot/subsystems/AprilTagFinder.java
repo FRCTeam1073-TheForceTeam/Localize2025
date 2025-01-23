@@ -45,10 +45,10 @@ public class AprilTagFinder extends SubsystemBase
   public PhotonCamera frontLeftCam = new PhotonCamera("FrontLeftCamera");
   public PhotonCamera frontRightCam = new PhotonCamera("FrontRightCamera");
   //Camera height: 0.2159m, x and y: 0.264m
-  public final Transform3d fLCamTransform3d = new Transform3d(new Translation3d(0.264,0.264, 0.2159), new Rotation3d(0, 0, (Math.PI) / 4));  // front left has the new mount
-  public final Transform3d fRCamTransform3d = new Transform3d(new Translation3d(0.264, -0.264, 0.2159), new Rotation3d(0, 28.125, -30));
-  public final Transform3d bLCamTransform3d = new Transform3d(new Translation3d(-0264, -0.264, 0.2159), new Rotation3d(0, 28.125, 30));
-  public final Transform3d bRCamTransform3d = new Transform3d(new Translation3d(0.264, -0.264, 0.2159), new Rotation3d(0, 28.125, -30));
+  public final Transform3d fLCamTransform3d = new Transform3d(new Translation3d(0.264,0.264, 0.2159), new Rotation3d(0, 0.4908, (Math.PI) / 6));  // front left has the new mount
+  public final Transform3d fRCamTransform3d = new Transform3d(new Translation3d(0.264, -0.264, 0.2159), new Rotation3d(0, 0, -(Math.PI) / 4));
+  public final Transform3d bLCamTransform3d = new Transform3d(new Translation3d(-0264, -0.264, 0.2159), new Rotation3d(0, 0, 3*(Math.PI) / 4));
+  public final Transform3d bRCamTransform3d = new Transform3d(new Translation3d(0.264, -0.264, 0.2159), new Rotation3d(0, 0, -3*(Math.PI) / 4));
   List<PhotonTrackedTarget> responseFL;
   List<PhotonTrackedTarget> responseFR;
   List<PhotonTrackedTarget> responseBL;
