@@ -109,8 +109,6 @@ public class Localizer extends SubsystemBase
     @Override
     public void periodic()
     {
-        SmartDashboard.putNumber("StdDevX Update", StdDevX); //use this to check if sendable get works
-
         double now = Timer.getFPGATimestamp();
         estimator.updateWithTime(now, driveTrain.getOdometry().getRotation(), swerveModulePositions);
         /*
