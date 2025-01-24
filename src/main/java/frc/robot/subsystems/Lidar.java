@@ -2,9 +2,9 @@ package frc.robot.subsystems;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Lidar extends DiagnosticsSubsystem {
     SerialPort serialPort = new SerialPort(460800, SerialPort.Port.kUSB1, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
@@ -16,6 +16,8 @@ public class Lidar extends DiagnosticsSubsystem {
     byte scanDescriptor[] = {(byte) 0xa5, (byte) 0x5a, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x81};
     byte stopCommand[] = {(byte) 0xa5, (byte) 0x25};
     byte startCommand[] = {(byte) 0xa5, (byte) 0x20};
+    boolean arrayOneFilled = false;
+    boolean recordScan = true;
     boolean measureMode = false;
     boolean writeToOne = true;
     double arrayOneTimestamp;
@@ -28,7 +30,12 @@ public class Lidar extends DiagnosticsSubsystem {
     float quality;
     float range_m;
     float range_mm;
+    int minAcceptedRange; // In meters, TODO: set min accepted range
+    int maxAcceptedRange; // In meters, TODO: set max accepted range
+    int minAcceptedAngle; // In radians, TODO: set min accepted angle
+    int maxAcceptedAngle; // In radians, TODO: set min accepted angle
     int numBytesAvail = 0;
+    int numTimesLidarArraySwitch = 0;
     int numScansRead;
     int numScansToRead;
     int offset;
@@ -71,7 +78,6 @@ public class Lidar extends DiagnosticsSubsystem {
             //System.out.println(serialPort.getBytesReceived());
         }
         
-        // TODO: look into serial port read
         // How to print out hex in java - String.format("0x%02x", what you're printing out)
 
     }
@@ -103,7 +109,6 @@ public class Lidar extends DiagnosticsSubsystem {
 
     // what is most efficient?
     public void readAndParseMeasurements(int numAvail){
-        // TODO: promote byte to an int - do something to make it from 0 to 255 - look through old rangefinder for converting values
 
         // round down to determine number of full scans available
         numScansToRead = numAvail/bytesPerScan;
@@ -112,20 +117,25 @@ public class Lidar extends DiagnosticsSubsystem {
         for(int i = 0; i < numScansToRead; i ++){
             offset = i * bytesPerScan;
            if((rawData[0] & 0x01) == 1){
-                System.out.println("Switching LiDAR arrays");
+                //System.out.println("Switching LiDAR arrays");
                 if(writeToOne) {
                     //done writing to one, switching to writing to two - sets the timestamp for array two
                     two.clear();
                     arrayTwoTimestamp = Timer.getFPGATimestamp();
+                    numTimesLidarArraySwitch ++;
+                    arrayOneFilled = true;
                 }
 
                 else {
                     //done writing to two, switching to writing to one - sets the timestamp for array one
                     one.clear();
                     arrayOneTimestamp = Timer.getFPGATimestamp();
+                    numTimesLidarArraySwitch ++;
                 }
                 writeToOne = !writeToOne;
             } 
+            // TODO: print out number of scans we got, map out scans?, put angle filter (only care abt certain angles), range filter
+            
             // divide by 4 to drop the lower two bits
             quality = (rawData[offset + 0] & 0xFF) / 4;
             // angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
@@ -134,18 +144,28 @@ public class Lidar extends DiagnosticsSubsystem {
             range_mm = 256 * (rawData[offset + 4] & 0xFF) + (rawData[offset + 3] & 0xFF);
             angle_rad = angle_deg / 180.0f * 3.141592f;
             range_m = range_mm / 1000;
-            if(writeToOne){
-                one.add(new Scan(range_m, angle_rad, quality));
-            } 
-            else{
-                two.add(new Scan(range_m, angle_rad, quality));
+            //if(range_m > maxAcceptedRange || range_m < minAcceptedRange) recordScan = false;
+            //if(angle_rad > maxAcceptedAngle || angle_rad < minAcceptedAngle) recordScan = false;
+            if(recordScan){
+                if(writeToOne){
+                    one.add(new Scan(range_m, angle_rad, quality));
+                } 
+                else{
+                    two.add(new Scan(range_m, angle_rad, quality));
+                }
             }
-
+            recordScan = true;
         }
     }
 
     @Override
     public void periodic() {
+        if(arrayOneFilled){
+            SmartDashboard.putNumber("Times Lidar Array Switched", getTimesArraySwitch());
+            SmartDashboard.putNumber("Range", getRange());
+            SmartDashboard.putNumber("Angle", getAngle());
+            SmartDashboard.putNumber("Quality", getQuality());
+        }
         numBytesAvail = serialPort.getBytesReceived();
         if(measureMode){
             // read and parse all available scan data to read - fill array
@@ -167,12 +187,20 @@ public class Lidar extends DiagnosticsSubsystem {
         // TODO transform 3D
         }
 
-    @Override
-    public void initSendable(SendableBuilder builder) {
-        super.initSendable(builder);
-        // builder.addDoubleProperty("Range", this::getRange, null);
-        // builder.addDoubleProperty("Intensity", this::getIntensity, null);
-        // builder.addDoubleProperty("Timestamp", this::getTimestamp, null);
+    public int getTimesArraySwitch(){
+        return numTimesLidarArraySwitch;
+    }
+
+    public double getRange(){
+        return getScan().get(0).getRange();
+    }
+
+    public double getAngle(){
+        return getScan().get(0).getAngle();
+    }
+    
+    public double getQuality(){
+        return one.get(0).getQuality();
     }
 
     @Override

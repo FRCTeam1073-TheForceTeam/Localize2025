@@ -31,4 +31,8 @@ public class Scan {
         return quality;
     }
 
+    public String toString(){
+        return "Range: " + range + " Angle: " + angle + " Quality: " + quality;
+    }
+
 }

@@ -31,6 +31,7 @@ public class RobotContainer
 
     SmartDashboard.putData(m_drivetrain);
     SmartDashboard.putData(m_OI);
+    SmartDashboard.putData(m_lidar);
 
     configureBindings();
   }
@@ -69,4 +70,5 @@ public class RobotContainer
   public Command getDisabledCommand() {
     return null;
   }
+
 }
