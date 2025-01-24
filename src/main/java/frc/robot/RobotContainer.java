@@ -53,6 +53,7 @@ public class RobotContainer
   private boolean isRed;
   private int level;
   private Pose2d where = new Pose2d();
+  private boolean set = false;
 
 
   private final SendableChooser<String> m_positionChooser = new SendableChooser<>();
@@ -173,6 +174,7 @@ public class RobotContainer
   }
 
   public void disabledInit() {
+    //create a bool for pose is set
     double centerY = 4.026;
     int sign = 1;
     String selectedAuto = m_positionChooser.getSelected();
@@ -219,6 +221,10 @@ public class RobotContainer
   }
 
   public void disabledPeriodic() {
-  
+    //this makes sure to run disabled init when the robot starts first time
+    if(set == false) {
+      disabledInit();
+      set = true;
+    }
   }
 }
