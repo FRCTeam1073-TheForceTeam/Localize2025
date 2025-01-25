@@ -64,19 +64,23 @@ public class AprilTagFinder extends SubsystemBase
 
   public int wait_counter = 0;
 
-  public List<PhotonTrackedTarget> getFLCurrentTagData() {
+  public List<PhotonTrackedTarget> getFLCurrentTagData() 
+  {
     return responseFL;
   }
 
-  public List<PhotonTrackedTarget> getFRCurrentTagData() {
+  public List<PhotonTrackedTarget> getFRCurrentTagData() 
+  {
     return responseFR;
   }
 
-  public List<PhotonTrackedTarget> getBLCurrentTagData() {
+  public List<PhotonTrackedTarget> getBLCurrentTagData() 
+  {
     return responseBL;
   }
 
-  public List<PhotonTrackedTarget> getBRCurrentTagData() {
+  public List<PhotonTrackedTarget> getBRCurrentTagData() 
+  {
     return responseBR;
   }
 
@@ -168,23 +172,29 @@ public class AprilTagFinder extends SubsystemBase
   }
 
   @Override
-  public void periodic() { 
+  public void periodic() 
+  { 
     readTagData();  
 
-    if(responseFL.size() > 0) {
+    if(responseFL.size() > 0) 
+    {
       SmartDashboard.putNumber("FL ID", responseFL.get(0).getFiducialId());
     }
-    else {
+    else 
+    {
       SmartDashboard.putNumber("FL ID", -1);
     }
-    if(responseFR.size() > 0) {
+    if(responseFR.size() > 0) 
+    {
       SmartDashboard.putNumber("FR ID", responseFR.get(0).getFiducialId());
     }
-    else {
+    else 
+    {
       SmartDashboard.putNumber("FR ID", -1);
     }
     SmartDashboard.putNumber("Total Tags Seen", responseFL.size() + responseFR.size());
-    if(getMeasurements().size() > 0) {
+    if(getMeasurements().size() > 0) 
+    {
       SmartDashboard.putNumber("FL Measurement X", getMeasurements().get(0).pose.getX());
       SmartDashboard.putNumber("FL Measurement Y", getMeasurements().get(0).pose.getY());
     }

@@ -62,7 +62,8 @@ public class Localizer extends SubsystemBase
     }
 
     @Override
-    public void initSendable(SendableBuilder builder) {
+    public void initSendable(SendableBuilder builder) 
+    {
         builder.setSmartDashboardType("Localizer");
         builder.addDoubleProperty("StdDev X", this::getStdDevX, this::setStdDevX);
         builder.addDoubleProperty("StdDev Y", this::getStdDevY, this::setStdDevY);
@@ -72,55 +73,68 @@ public class Localizer extends SubsystemBase
         builder.addDoubleProperty("Angular Speed Thres", this::getAngularSpeed, this::setAngularSpeed);
     }
 
-    public double getTime() {
+    public double getTime() 
+    {
         return timeGap;
     }
 
-    public void setTime(double time) {
+    public void setTime(double time) 
+    {
         timeGap = time;
     }
     
-    public double getStdDevX() {
+    public double getStdDevX() 
+    {
         return StdDevX;
     }
 
-    public void setStdDevX(double newX) {
+    public void setStdDevX(double newX) 
+    {
         StdDevX = newX;
     }
 
-    public double getStdDevY() {
+    public double getStdDevY() 
+    {
         return StdDevY;
     }
 
-    public void setStdDevY(double newY) {
+    public void setStdDevY(double newY) 
+    {
         StdDevX = newY;
     }
 
-    public double getStdDevA() {
+    public double getStdDevA() 
+    {
         return StdDevA;
     }
 
-    public void setStdDevA(double newA) {
+    public void setStdDevA(double newA) 
+    {
         StdDevX = newA;
     }
 
-    public void resetPos(Pose2d newPos) {
+    public void resetPos(Pose2d newPos) 
+    {
         estimator.resetPose(newPos);
     }
 
-    public double getLinearSpeed() {
+    public double getLinearSpeed() 
+    {
         return linearSpeedThreshold;
     }
 
-    public void setLinearSpeed(double speed) {
+    public void setLinearSpeed(double speed) 
+    {
         linearSpeedThreshold = speed;
     }
 
-    public double getAngularSpeed() {
+    public double getAngularSpeed() 
+    {
         return angularSpeedThreshold;
     }
 
-    public void setAngularSpeed(double angularSpeed) {
+    public void setAngularSpeed(double angularSpeed) 
+    {
         angularSpeedThreshold = angularSpeed;
     }
 
