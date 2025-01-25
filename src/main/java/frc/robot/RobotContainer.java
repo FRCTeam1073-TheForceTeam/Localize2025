@@ -63,6 +63,7 @@ public class RobotContainer
   private static final String centerAuto = "Center Auto";
   
   private final SendableChooser<String> m_levelChooser = new SendableChooser<>();
+  private static final String testLevel = "Test Level";
   private static final String noLevelAuto = "No Level";
   private static final String level1 = "Level 1";
   private static final String level2 = "Level 2";
@@ -84,6 +85,7 @@ public class RobotContainer
     m_positionChooser.addOption("Center Auto", centerAuto);
 
     m_levelChooser.setDefaultOption("No Level", noLevelAuto);
+    m_levelChooser.addOption("Test Auto", testLevel);
     m_levelChooser.addOption("Level 1", level1);
     m_levelChooser.addOption("Level 2", level2);
     m_levelChooser.addOption("Level 3", level3);
@@ -107,7 +109,8 @@ public class RobotContainer
   {
    // return Commands.print("No autonomous command configured");
    // negative 1 to indicate no auto select
-    switch(m_levelChooser.getSelected()){
+    switch(m_levelChooser.getSelected())
+    {
       case noLevelAuto:
         level = -1;
         break;
@@ -123,6 +126,9 @@ public class RobotContainer
       case level4:
         level = 4;                  
         break;
+      case testLevel:
+        level = 99;
+        break;
       default:
         level = -1;
         break;
@@ -135,7 +141,7 @@ public class RobotContainer
       case leftAuto:
         return AutoLeftStart.create(level, isRed);
       case rightAuto:
-        return AutoRightStart.create(level, isRed);
+        return AutoRightStart.create(level, isRed, m_drivetrain);
       case centerAuto:
         return AutoCenterStart.create(level, isRed);
       default:

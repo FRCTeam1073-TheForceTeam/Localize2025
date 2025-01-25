@@ -34,40 +34,40 @@ public class Auto0 {
             {
                 if (DriverStation.getAlliance().get() == Alliance.Blue) //TODO: this should be one if statement (fix)
                 {
-                Pose2d startPos = new Pose2d(centerX-startLineOffset, centerY, new Rotation2d(Math.PI)); //startline
-                Pose2d endPos = new Pose2d(5.321, 4.026, new Rotation2d(0)); // ID 21
-                ArrayList<Pose2d> hereAndThere = new ArrayList<Pose2d>();
-                hereAndThere.add(startPos);
-                hereAndThere.add(endPos);
-                Trajectory allOverThePlace = TrajectoryGenerator.generateTrajectory(
-                                            hereAndThere, 
-                                            new TrajectoryConfig(99, 99));
-                m_field.getObject("trajectory").setTrajectory(allOverThePlace);
-                m_drivetrain.resetOdometry(endPos);
+                    Pose2d startPos = new Pose2d(centerX-startLineOffset, centerY, new Rotation2d(Math.PI)); //startline
+                    Pose2d endPos = new Pose2d(5.321, 4.026, new Rotation2d(0)); // ID 21
+                    ArrayList<Pose2d> hereAndThere = new ArrayList<Pose2d>();
+                    hereAndThere.add(startPos);
+                    hereAndThere.add(endPos);
+                    Trajectory allOverThePlace = TrajectoryGenerator.generateTrajectory(
+                                                hereAndThere, 
+                                                new TrajectoryConfig(99, 99));
+                    m_field.getObject("trajectory").setTrajectory(allOverThePlace);
+                    m_drivetrain.resetOdometry(endPos);
                 }
                 else if (DriverStation.getAlliance().get() == Alliance.Red)
                 {
-                SmartDashboard.putString("Alliance", "Red");
-                isRed = true;
-                Pose2d startPos = new Pose2d(centerX + startLineOffset, centerY, new Rotation2d(Math.PI)); //start at start line
-                ///Pose2d there = new Pose2d(2, 4, new Rotation2d(Math.PI)); // #ID we made it up
-                //Pose2d endPos = new Pose2d(12.227, 4.026, new Rotation2d(Math.PI)); // ID 10
-                Pose2d endPos = new Pose2d(12, 4.03, new Rotation2d(Math.PI)); // close to ID 10 but decimals to the thousandth place cause an error for some reason
-                ArrayList<Pose2d> hereAndThere = new ArrayList<Pose2d>();
-                hereAndThere.add(startPos);
-                hereAndThere.add(endPos);
-                Trajectory allOverThePlace = TrajectoryGenerator.generateTrajectory(
-                                            hereAndThere, 
-                                            new TrajectoryConfig(99, 99));
-                m_field.getObject("trajectory").setTrajectory(allOverThePlace);
-                m_drivetrain.resetOdometry(endPos);
+                    SmartDashboard.putString("Alliance", "Red");
+                    isRed = true;
+                    Pose2d startPos = new Pose2d(centerX + startLineOffset, centerY, new Rotation2d(Math.PI)); //start at start line
+                    ///Pose2d there = new Pose2d(2, 4, new Rotation2d(Math.PI)); // #ID we made it up
+                    //Pose2d endPos = new Pose2d(12.227, 4.026, new Rotation2d(Math.PI)); // ID 10
+                    Pose2d endPos = new Pose2d(12, 4.03, new Rotation2d(Math.PI)); // close to ID 10 but decimals to the thousandth place cause an error for some reason
+                    ArrayList<Pose2d> hereAndThere = new ArrayList<Pose2d>();
+                    hereAndThere.add(startPos);
+                    hereAndThere.add(endPos);
+                    Trajectory allOverThePlace = TrajectoryGenerator.generateTrajectory(
+                                                hereAndThere, 
+                                                new TrajectoryConfig(99, 99));
+                    m_field.getObject("trajectory").setTrajectory(allOverThePlace);
+                    m_drivetrain.resetOdometry(endPos);
                 }
                 else
                 {
-                SmartDashboard.putString("Alliance", "Null");
-                isRed = false;
-                Pose2d where = new Pose2d(0, 0, new Rotation2d(0));
-                m_drivetrain.resetOdometry(where);
+                    SmartDashboard.putString("Alliance", "Null");
+                    isRed = false;
+                    Pose2d where = new Pose2d(0, 0, new Rotation2d(0));
+                    m_drivetrain.resetOdometry(where);
                 }
             }
     
