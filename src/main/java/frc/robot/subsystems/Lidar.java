@@ -12,11 +12,12 @@ public class Lidar extends DiagnosticsSubsystem {
     //private final double elevationFactor = 0.94293; //0.97237; //compensating for the fact that it's not level: cos(angle of rangeFinder)
     ArrayList <Scan> one = new ArrayList<>();
     ArrayList <Scan> two = new ArrayList<>();
+    ArrayList <Scan> data = new ArrayList<>();
     byte getInfo[] = {(byte) 0xa5, (byte) 0x52};
     byte scanDescriptor[] = {(byte) 0xa5, (byte) 0x5a, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x81};
     byte stopCommand[] = {(byte) 0xa5, (byte) 0x25};
     byte startCommand[] = {(byte) 0xa5, (byte) 0x20};
-    boolean arrayOneFilled = false;
+    boolean arrayTwoFilled = false;
     boolean recordScan = true;
     boolean measureMode = false;
     boolean writeToOne = true;
@@ -75,14 +76,13 @@ public class Lidar extends DiagnosticsSubsystem {
             catch (Exception e) {
                 System.out.println(e);
             }
-            //System.out.println(serialPort.getBytesReceived());
         }
         
         // How to print out hex in java - String.format("0x%02x", what you're printing out)
 
     }
 
-    public ArrayList<Scan> getScan(){
+    public ArrayList<Scan> getLidarArray(){
         if(writeToOne){
             return two; 
         } else {
@@ -108,22 +108,24 @@ public class Lidar extends DiagnosticsSubsystem {
     }
 
     // what is most efficient?
-    public void readAndParseMeasurements(int numAvail){
+    public void readAndParseMeasurements(int numBytesAvail){
 
         // round down to determine number of full scans available
-        numScansToRead = numAvail/bytesPerScan;
+        numScansToRead = numBytesAvail/bytesPerScan;
         byte[] rawData = serialPort.read(numScansToRead * bytesPerScan);
         // TODO: clockwise is positive - opposite for robot
         for(int i = 0; i < numScansToRead; i ++){
             offset = i * bytesPerScan;
-           if((rawData[0] & 0x01) == 1){
-                //System.out.println("Switching LiDAR arrays");
+           if((rawData[offset] & 0x003) == 1){
+                // print out bytes
+                System.out.println(String.format("Angle Bytes: 0x%02x 0x%02x", rawData[offset + 1], rawData[offset + 2]));
+
                 if(writeToOne) {
                     //done writing to one, switching to writing to two - sets the timestamp for array two
                     two.clear();
                     arrayTwoTimestamp = Timer.getFPGATimestamp();
                     numTimesLidarArraySwitch ++;
-                    arrayOneFilled = true;
+                    writeToOne = false;
                 }
 
                 else {
@@ -131,40 +133,56 @@ public class Lidar extends DiagnosticsSubsystem {
                     one.clear();
                     arrayOneTimestamp = Timer.getFPGATimestamp();
                     numTimesLidarArraySwitch ++;
+                    arrayTwoFilled = true;
+                    writeToOne = true;
                 }
-                writeToOne = !writeToOne;
             } 
             // TODO: print out number of scans we got, map out scans?, put angle filter (only care abt certain angles), range filter
             
             // divide by 4 to drop the lower two bits
-            quality = (rawData[offset + 0] & 0xFF) / 4;
+            quality = ((rawData[offset + 0] & 0x0FC) >> 2);
             // angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
-            angle_deg = -128 * (rawData[(offset) + 2] & 0xFF) + ((rawData[offset + 1] & 0xFF)/ 2);
+            angle_deg = ((Byte.toUnsignedInt(rawData[offset + 2]) & 0x07F) << 7) | ((Byte.toUnsignedInt(rawData[offset + 1]) & 0x0FE) >> 1);
             //range = Math.pow(2, 8) * distance[15:8] + distance[7:0]
-            range_mm = 256 * (rawData[offset + 4] & 0xFF) + (rawData[offset + 3] & 0xFF);
-            angle_rad = angle_deg / 180.0f * 3.141592f;
-            range_m = range_mm / 1000;
+            range_mm = ((rawData[offset + 4] & 0x0FF) << 8) | (rawData[offset + 3] & 0x0FF);
+            //angle_rad = 3.141592f * (angle_deg/64.0f) / 180.0f;
+            angle_rad = angle_deg/64.0f;
+            range_m = (range_mm / 4.0f) / 1000;
             //if(range_m > maxAcceptedRange || range_m < minAcceptedRange) recordScan = false;
             //if(angle_rad > maxAcceptedAngle || angle_rad < minAcceptedAngle) recordScan = false;
-            if(recordScan){
-                if(writeToOne){
-                    one.add(new Scan(range_m, angle_rad, quality));
-                } 
-                else{
-                    two.add(new Scan(range_m, angle_rad, quality));
-                }
+
+            // TODO: Error output if we lost sync with scanner - try turning off/handshake
+            // TODO: Add quality thresh-hold
+            if(writeToOne && one.size() < 512){
+                one.add(new Scan(range_m, angle_rad, quality));
+            } 
+            else if(!writeToOne && two.size() < 512){
+                two.add(new Scan(range_m, angle_rad, quality));
             }
-            recordScan = true;
+        }
+    }
+
+    public int getNumberScansToRead(){
+        return numScansToRead;
+    }
+
+    public int getNumberScans(){
+        if(writeToOne){
+            return two.size(); 
+        } else {
+            return one.size();
         }
     }
 
     @Override
     public void periodic() {
-        if(arrayOneFilled){
+        if(arrayTwoFilled){
             SmartDashboard.putNumber("Times Lidar Array Switched", getTimesArraySwitch());
             SmartDashboard.putNumber("Range", getRange());
             SmartDashboard.putNumber("Angle", getAngle());
             SmartDashboard.putNumber("Quality", getQuality());
+            SmartDashboard.putNumber("Number of Scans in LiDAR Array", getNumberScans());
+            SmartDashboard.putNumber("Number of Scans to Read", getNumberScansToRead());
         }
         numBytesAvail = serialPort.getBytesReceived();
         if(measureMode){
@@ -192,15 +210,15 @@ public class Lidar extends DiagnosticsSubsystem {
     }
 
     public double getRange(){
-        return getScan().get(0).getRange();
+        return getLidarArray().get(1).getRange();
     }
 
     public double getAngle(){
-        return getScan().get(0).getAngle();
+        return getLidarArray().get(1).getAngle();
     }
     
     public double getQuality(){
-        return one.get(0).getQuality();
+        return getLidarArray().get(1).getQuality();
     }
 
     @Override
