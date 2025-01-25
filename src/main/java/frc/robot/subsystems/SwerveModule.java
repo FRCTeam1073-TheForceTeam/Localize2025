@@ -120,13 +120,13 @@ public class SwerveModule extends DiagnosticsBase implements Sendable
         //double alpha = 4.87 / 5.356; (old)
         //double alpha = 1/524 / 1.6296 (new)
         double alpha = 0.95598 * 0.9352;
-        return alpha * (-driveMotor.getRotorPosition().getValueAsDouble() / cfg.rotationsPerMeter);
+        return alpha * (driveMotor.getRotorPosition().getValueAsDouble() / cfg.rotationsPerMeter);
     }
 
     // Return drive velocity in meters/second.
     public double getDriveVelocity()
     { 
-        return -driveMotor.getRotorVelocity().getValueAsDouble() / (cfg.rotationsPerMeter);
+        return driveMotor.getRotorVelocity().getValueAsDouble() / (cfg.rotationsPerMeter);
     }
     
     public double getTargetSteerRotations() {

@@ -27,6 +27,7 @@ public class MapDisplay extends SubsystemBase{
     @Override
     public void periodic()
     { 
+        //field.setRobotPose(driveTrain.getOdometry());
         field.setRobotPose(localizer.getPose());
         SmartDashboard.putData("Field", field); //the widget for this is the dropdown named "field"
         //https://github.wpilib.org/allwpilib/docs/release/java/edu/wpi/first/wpilibj/smartdashboard/Field2d.html

@@ -53,8 +53,6 @@ public class RobotContainer
   private boolean isRed;
   private int level;
   private Pose2d where = new Pose2d();
-  private boolean set = false;
-
 
   private final SendableChooser<String> m_positionChooser = new SendableChooser<>();
   private static final String noPositionAuto = "No Position";
@@ -165,7 +163,6 @@ public class RobotContainer
   {
     System.out.println("RobotContainer: init Preferences.");
     SwerveModuleConfig.initPreferences();
-    Drivetrain.initPreferences();
     //OI.initPreferences();
     //SwerveModule.initPreferences();
   }
@@ -180,57 +177,58 @@ public class RobotContainer
   }
 
   public void disabledInit() {
-    //create a bool for pose is set
-    double centerY = 4.026;
-    int sign = 1;
-    String selectedAuto = m_positionChooser.getSelected();
-    
-    double centerX = 8.774;
-    double startLineOffset = 12.227 -8.774 - 2.24; //id 10 x value - center x value - offset from reef to startline
-    Pose2d startPos = new Pose2d();
-    SmartDashboard.putString("Alliance", "None");
-
-    if(DriverStation.getAlliance().isPresent())
-    {
-      DriverStation.Alliance alliance = DriverStation.getAlliance().get();
-      if(alliance == Alliance.Blue) {
-        sign = -1;
-      }
-      if (selectedAuto.equals(leftAuto)) {
-        centerY -= sign * 2.013;
-      }
-      else if(selectedAuto.equals(rightAuto)) {
-        centerY += sign * 2.013;
-      }
-
-      if (alliance == Alliance.Blue)
-      {
-        isRed = false;
-        SmartDashboard.putString("Alliance", "Blue");
-        startPos = new Pose2d(centerX-startLineOffset, centerY, new Rotation2d(Math.PI)); //startline
-      }
-      else if (alliance == Alliance.Red)
-      {
-        SmartDashboard.putString("Alliance", "Red");
-        isRed = true;
-        startPos = new Pose2d(centerX + startLineOffset, centerY, new Rotation2d(0)); //startline
-      }
-      else
-      {
-        SmartDashboard.putString("Alliance", "Null");
-        isRed = false;
-        startPos = new Pose2d(0, 0, new Rotation2d(0));
-      }
-      m_drivetrain.resetOdometry(startPos);
-      m_localizer.resetPos(startPos);
-    }
   }
 
-  public void disabledPeriodic() {
-    //this makes sure to run disabled init when the robot starts first time
-    if(set == false) {
-      disabledInit();
-      set = true;
-    }
+  public boolean findStartPos() {
+      //create a bool for pose is set
+      double centerY = 4.026;
+      int sign = 1;
+      String selectedAuto = m_positionChooser.getSelected();
+      
+      double centerX = 8.774;
+      double startLineOffset = 12.227 -8.774 - 2.24; //id 10 x value - center x value - offset from reef to startline
+      Pose2d startPos = new Pose2d();
+      SmartDashboard.putString("Alliance", "None");
+  
+      if(DriverStation.getAlliance().isPresent())
+      {
+        DriverStation.Alliance alliance = DriverStation.getAlliance().get();
+        if(alliance == Alliance.Blue) {
+          sign = -1;
+        }
+        if (selectedAuto.equals(leftAuto)) {
+          centerY -= sign * 2.013;
+        }
+        else if(selectedAuto.equals(rightAuto)) {
+          centerY += sign * 2.013;
+        }
+  
+        if (alliance == Alliance.Blue)
+        {
+          isRed = false;
+          SmartDashboard.putString("Alliance", "Blue");
+          startPos = new Pose2d(centerX-startLineOffset, centerY, new Rotation2d(Math.PI)); //startline
+        }
+        else if (alliance == Alliance.Red)
+        {
+          SmartDashboard.putString("Alliance", "Red");
+          isRed = true;
+          startPos = new Pose2d(centerX + startLineOffset, centerY, new Rotation2d(0)); //startline
+        }
+        else
+        {
+          SmartDashboard.putString("Alliance", "Null");
+          isRed = false;
+          startPos = new Pose2d(0, 0, new Rotation2d(0));
+        }
+        m_drivetrain.resetOdometry(startPos);
+        m_localizer.resetPose(startPos);
+        return true;
+      }
+      return false;
+  }
+
+  public boolean disabledPeriodic() {
+    return findStartPos();
   }
 }

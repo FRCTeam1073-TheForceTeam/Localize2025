@@ -113,7 +113,7 @@ public class Localizer extends SubsystemBase
         StdDevX = newA;
     }
 
-    public void resetPos(Pose2d newPos) 
+    public void resetPose(Pose2d newPos) 
     {
         estimator.resetPose(newPos);
     }

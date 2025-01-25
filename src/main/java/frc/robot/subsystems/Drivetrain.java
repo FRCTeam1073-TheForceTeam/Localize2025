@@ -25,7 +25,6 @@ import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Drivetrain extends DiagnosticsSubsystem 
@@ -63,7 +62,7 @@ public class Drivetrain extends DiagnosticsSubsystem
 
     SwerveModuleConfig moduleConfig = new SwerveModuleConfig(); // Gets preferences and defaults for fields.
     moduleConfig.moduleNumber = 0;
-    moduleConfig.position = new Translation2d(Preferences.getDouble("Drive.ModulePositions", 0.264), Preferences.getDouble("Drive.ModulePositions", 0.264));
+    moduleConfig.position = new Translation2d(0.264, 0.264);
 
     modules[0] = new SwerveModule(moduleConfig, moduleIDConfig);
     modulePositions[0] = new SwerveModulePosition();
@@ -73,7 +72,7 @@ public class Drivetrain extends DiagnosticsSubsystem
 
     moduleConfig = new SwerveModuleConfig(); // Gets preferences and defaults for fields.
     moduleConfig.moduleNumber = 1;
-    moduleConfig.position = new Translation2d(Preferences.getDouble("Drive.ModulePositions", 0.264), -Preferences.getDouble("Drive.ModulePositions", 0.264));
+    moduleConfig.position = new Translation2d(0.264, -0.264);
 
     modules[1] = new SwerveModule(moduleConfig, moduleIDConfig);
     modulePositions[1] = new SwerveModulePosition();
@@ -83,7 +82,7 @@ public class Drivetrain extends DiagnosticsSubsystem
 
     moduleConfig = new SwerveModuleConfig(); // Gets preferences and defaults for fields.
     moduleConfig.moduleNumber = 2;
-    moduleConfig.position = new Translation2d(-Preferences.getDouble("Drive.ModulePositions", 0.264), Preferences.getDouble("Drive.ModulePositions", 0.264));
+    moduleConfig.position = new Translation2d(-0.264, 0.264);
 
     modules[2] = new SwerveModule(moduleConfig, moduleIDConfig);
     modulePositions[2] = new SwerveModulePosition();
@@ -92,7 +91,7 @@ public class Drivetrain extends DiagnosticsSubsystem
     moduleIDConfig = new SwerveModuleIDConfig(12, 8, 4);
     moduleConfig = new SwerveModuleConfig(); // Gets preferences and defaults for fields.
     moduleConfig.moduleNumber = 3;
-    moduleConfig.position = new Translation2d(-Preferences.getDouble("Drive.ModulePositions", 0.264), -Preferences.getDouble("Drive.ModulePositions", 0.264));
+    moduleConfig.position = new Translation2d(-0.264, -0.264);
 
     modules[3] = new SwerveModule(moduleConfig, moduleIDConfig);
     modulePositions[3] = new SwerveModulePosition();
@@ -113,7 +112,7 @@ public class Drivetrain extends DiagnosticsSubsystem
     odometry = new SwerveDriveOdometry(kinematics, Rotation2d.fromDegrees(getHeadingDegrees()), modulePositions, new Pose2d(0,0,new Rotation2d(Math.PI)));
 
     // Configure maximum linear speed for limiting:
-    maximumLinearSpeed = Preferences.getDouble("Drive.MaximumLinearSpeed", 3.5);
+    maximumLinearSpeed = 3.5;
     // Initial chassis speeds are zero:
     targetChassisSpeeds = new ChassisSpeeds(0,0,0);
 
@@ -122,13 +121,6 @@ public class Drivetrain extends DiagnosticsSubsystem
     // for (int mod = 0; mod < 4; ++mod) {
     //   addChild(String.format("Module[%d]", mod), modules[mod]);
     // }
-  }
-
-  // Initialize preferences for this class:
-  public static void initPreferences() 
-  {
-    Preferences.initDouble("Drive.MaximumLinearSpeed", 4.0); // Meters/second
-    Preferences.initDouble("Drive.ModulePositions", 0.264);
   }
 
   // Returns target x velocity (for sendable)
@@ -149,6 +141,7 @@ public class Drivetrain extends DiagnosticsSubsystem
   @Override
   public void initSendable(SendableBuilder builder){
     super.initSendable(builder);
+    //TODO: take out sendable stuff from the code
     // builder.setSmartDashboardType("Drivetrain");
     builder.addBooleanProperty("ParkingBrake", this::getParkingBrake, null);
     builder.addDoubleProperty("Odo X", this::getOdometryX, null);
