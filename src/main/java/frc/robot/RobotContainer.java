@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.commands.Autos.AutoCenterStart;
 import frc.robot.commands.Autos.AutoLeftStart;
@@ -47,6 +48,7 @@ public class RobotContainer
   private final Localizer m_localizer = new Localizer(m_drivetrain, m_fieldMap, m_aprilTagFinder);
   private final MapDisplay m_MapDisplay = new MapDisplay(m_drivetrain, m_localizer, m_fieldMap);
 
+  private final AutoRightStart m_AutoRightStartCommand = new AutoRightStart();
 
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder);
 
@@ -96,7 +98,11 @@ public class RobotContainer
     configureBindings();
   }
 
-  private void configureBindings() {}
+  private void configureBindings() {
+    Trigger testCommand = new Trigger(m_OI::getDriverAButton);
+    testCommand.onTrue(m_AutoRightStartCommand.create(level, isRed, m_drivetrain));
+    
+  }
 
   public void autonomousInit()
   {
