@@ -13,10 +13,14 @@ public class Scan {
     float range;
     float angle;
     float quality;
-    public Scan(float range, float angle, float quality){
+    double x_robot;
+    double y_robot;
+    public Scan(float range, float angle, float quality, double x, double y){
         this.range = range;
         this.angle = angle;
         this.quality = quality;
+        x_robot = x;
+        y_robot = y;
     }
 
     public float getRange(){

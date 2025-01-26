@@ -2,6 +2,13 @@ package frc.robot.subsystems;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -13,6 +20,7 @@ public class Lidar extends DiagnosticsSubsystem {
     ArrayList <Scan> one = new ArrayList<>();
     ArrayList <Scan> two = new ArrayList<>();
     ArrayList <Scan> data = new ArrayList<>();
+    ArrayList <Scan> ransac = new ArrayList<>();
     byte getInfo[] = {(byte) 0xa5, (byte) 0x52};
     byte scanDescriptor[] = {(byte) 0xa5, (byte) 0x5a, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x81};
     byte stopCommand[] = {(byte) 0xa5, (byte) 0x25};
@@ -26,24 +34,35 @@ public class Lidar extends DiagnosticsSubsystem {
     double filtered_range = 0.0;
     double intensity = 0.0; // starts to die at under 0.005
     double timestamp = 0.0;
+    double x_l;
+    double y_l;
     float angle_deg;
     float angle_rad;
     float quality;
     float range_m;
     float range_mm;
-    int minAcceptedRange; // In meters, TODO: set min accepted range
-    int maxAcceptedRange; // In meters, TODO: set max accepted range
-    int minAcceptedAngle; // In radians, TODO: set min accepted angle
-    int maxAcceptedAngle; // In radians, TODO: set min accepted angle
+    final float minAcceptedRange = 0.07f; // In meters
+    final int maxAcceptedRange = 3; // In meters
+    final int minAcceptedAngle1 = 0; // In degrees, for the first range of accepted angles
+    final int maxAcceptedAngle1 = 80; // In degrees, for the first range of accepted angles
+    final int minAcceptedAngle2 = 280; // In degrees, for the second range of accepted angles
+    final int maxAcceptedAngle2 = 360; // In degrees, for the second range of accepted angles
+    private final int minAcceptedQuality = 5;
+    int minSamples;
     int numBytesAvail = 0;
     int numTimesLidarArraySwitch = 0;
     int numScansRead;
     int numScansToRead;
     int offset;
     int rawDataByte;
+    Transform2d robotToLidar = new Transform2d(new Translation2d(0.27, 0), new Rotation2d()); // Translation needs x and y, rotation needs 
+    Matrix<N3,N3> T;
+    Scan point1;
+    Scan point2;
 
     public Lidar () {
         // before
+        T = robotToLidar.toMatrix();
         serialPort.setWriteBufferMode(SerialPort.WriteBufferMode.kFlushOnAccess);
         super.setSubsystem("Lidar");
         serialPort.setFlowControl(SerialPort.FlowControl.kNone);
@@ -81,6 +100,20 @@ public class Lidar extends DiagnosticsSubsystem {
         // How to print out hex in java - String.format("0x%02x", what you're printing out)
 
     }
+    /*Start with the input data - ArrayLists
+    * Pick random samples
+    * Fit a mathematical model (line, curve, 3d shape, ...)
+    * Compute a cost by checking how many points fit the model
+    * Repeat until you found the model with the lowest cost */
+    public void lidarRANSAC(){
+        ransac = getLidarArray();
+        point1 = ransac.get((int) Math.random() * ransac.size());
+        point2 = ransac.get((int) Math.random() * ransac.size());
+        while(point1 == point2){
+            point2 = ransac.get((int) Math.random() * ransac.size());
+        }
+        
+    }
 
     public ArrayList<Scan> getLidarArray(){
         if(writeToOne){
@@ -107,6 +140,16 @@ public class Lidar extends DiagnosticsSubsystem {
         return Arrays.equals(received, scanDescriptor);
     }
 
+    public boolean isAngleGood(float angle){
+        if((angle > minAcceptedAngle1 && angle < maxAcceptedAngle1) || (angle > minAcceptedAngle2 && angle < maxAcceptedAngle2)) return true;
+        else return false;
+    }
+
+    public boolean isRangeGood(float range){
+        if((range < maxAcceptedRange) && (range > minAcceptedRange)) return true;
+        else return false;
+    }
+
     // what is most efficient?
     public void readAndParseMeasurements(int numBytesAvail){
 
@@ -116,11 +159,12 @@ public class Lidar extends DiagnosticsSubsystem {
         // TODO: clockwise is positive - opposite for robot
         for(int i = 0; i < numScansToRead; i ++){
             offset = i * bytesPerScan;
+            recordScan = true;
            if((rawData[offset] & 0x003) == 1){
                 // print out bytes
                 System.out.println(String.format("Angle Bytes: 0x%02x 0x%02x", rawData[offset + 1], rawData[offset + 2]));
 
-                if(writeToOne) {
+                if(writeToOne){
                     //done writing to one, switching to writing to two - sets the timestamp for array two
                     two.clear();
                     arrayTwoTimestamp = Timer.getFPGATimestamp();
@@ -141,24 +185,33 @@ public class Lidar extends DiagnosticsSubsystem {
             
             // divide by 4 to drop the lower two bits
             quality = ((rawData[offset + 0] & 0x0FC) >> 2);
+            if(quality < minAcceptedQuality) recordScan = false;
             // angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
             angle_deg = ((Byte.toUnsignedInt(rawData[offset + 2]) & 0x0FF) << 7) | ((Byte.toUnsignedInt(rawData[offset + 1]) & 0x0FE) >> 1);
+            angle_deg /= 64.0f;
             //range = Math.pow(2, 8) * distance[15:8] + distance[7:0]
             range_mm = ((rawData[offset + 4] & 0x0FF) << 8) | (rawData[offset + 3] & 0x0FF);
-            //angle_rad = 3.141592f * (angle_deg/64.0f) / 180.0f;
-            angle_rad = angle_deg/64.0f;
+            angle_rad = 3.141592f * angle_deg / 180.0f;
             range_m = (range_mm / 4.0f) / 1000;
-            //if(range_m > maxAcceptedRange || range_m < minAcceptedRange) recordScan = false;
-            //if(angle_rad > maxAcceptedAngle || angle_rad < minAcceptedAngle) recordScan = false;
+            //quality, range, and angle filter
+            if(quality < minAcceptedQuality) recordScan = false;
+            if(isAngleGood(angle_deg) == false) recordScan = false;
+            if(isRangeGood(range_m) == false) recordScan = false;
 
             // TODO: Error output if we lost sync with scanner - try turning off/handshake
-            // TODO: Add quality thresh-hold
-            if(writeToOne && one.size() < 512){
-                one.add(new Scan(range_m, angle_rad, quality));
-            } 
-            else if(!writeToOne && two.size() < 512){
-                two.add(new Scan(range_m, angle_rad, quality));
+            if(recordScan){
+                x_l = Math.cos(-angle_rad) * range_m;
+                y_l = Math.sin(-angle_rad) * range_m;
+                Matrix<N3, N1> lidarPoint = VecBuilder.fill(x_l, y_l, 1.0);
+                Matrix<N3, N1> robotPoint = T.times(lidarPoint);
+                if(writeToOne && one.size() < 512){
+                one.add(new Scan(range_m, angle_rad, quality, robotPoint.get(0,0), robotPoint.get(1, 0)));
+                } 
+                else if(!writeToOne && two.size() < 512){
+                two.add(new Scan(range_m, angle_rad, quality, robotPoint.get(0,0), robotPoint.get(1, 0)));
+                }
             }
+            
         }
     }
 
@@ -181,6 +234,8 @@ public class Lidar extends DiagnosticsSubsystem {
             SmartDashboard.putNumber("Range", getRange());
             SmartDashboard.putNumber("Angle", getAngle());
             SmartDashboard.putNumber("Quality", getQuality());
+            SmartDashboard.putNumber("LiDAR X Value", getXVal());
+            SmartDashboard.putNumber("LiDAR Y Value", getYVal());
             SmartDashboard.putNumber("Number of Scans in LiDAR Array", getNumberScans());
             SmartDashboard.putNumber("Number of Scans to Read", getNumberScansToRead());
         }
@@ -219,6 +274,14 @@ public class Lidar extends DiagnosticsSubsystem {
     
     public double getQuality(){
         return getLidarArray().get(1).getQuality();
+    }
+
+    public double getXVal(){
+        return getLidarArray().get(1).getX();
+    }
+    
+    public double getYVal(){
+        return getLidarArray().get(1).getY();
     }
 
     @Override
