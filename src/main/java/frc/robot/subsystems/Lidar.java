@@ -142,7 +142,7 @@ public class Lidar extends DiagnosticsSubsystem {
             // divide by 4 to drop the lower two bits
             quality = ((rawData[offset + 0] & 0x0FC) >> 2);
             // angle = Math.pow(2, 7) * angle[14:7] + angle[6:0]
-            angle_deg = ((Byte.toUnsignedInt(rawData[offset + 2]) & 0x07F) << 7) | ((Byte.toUnsignedInt(rawData[offset + 1]) & 0x0FE) >> 1);
+            angle_deg = ((Byte.toUnsignedInt(rawData[offset + 2]) & 0x0FF) << 7) | ((Byte.toUnsignedInt(rawData[offset + 1]) & 0x0FE) >> 1);
             //range = Math.pow(2, 8) * distance[15:8] + distance[7:0]
             range_mm = ((rawData[offset + 4] & 0x0FF) << 8) | (rawData[offset + 3] & 0x0FF);
             //angle_rad = 3.141592f * (angle_deg/64.0f) / 180.0f;
