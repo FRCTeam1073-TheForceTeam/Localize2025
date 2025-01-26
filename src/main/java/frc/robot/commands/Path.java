@@ -70,8 +70,7 @@ public class Path
         public boolean entryActivateValue = false;
         public boolean exitActivateValue = false;
 
-        public Segment(Point start, Point end, double orientation, double velocity) 
-        {
+        public Segment(Point start, Point end, double orientation, double velocity) {
             this.start = start;
             this.end = end;
             updateDirection();
@@ -93,15 +92,13 @@ public class Path
         }
     }
 
-    public static class PathFeedback
-    {
+    public static class PathFeedback {
         Vector<N2> velocity;
         Pose2d pose;
         double orientation_weight = 1.0;
         double translation_weight = 1.0;
 
-        public PathFeedback(Vector<N2> velocity, Pose2d pose, double ow, double tw)
-        {
+        public PathFeedback(Vector<N2> velocity, Pose2d pose, double ow, double tw) {
             this.velocity = velocity;
             this.pose = pose;
             this.orientation_weight = ow;

@@ -10,9 +10,12 @@ import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Localizer;
 
 /** Add your docs here. */
-public class AutoRightStart {
-    public static Command create(int level, boolean isRed, Drivetrain drivetrain, Localizer localizer) {
-        switch(level) {
+public class AutoRightStart 
+{
+    public static Command create(int level, boolean isRed, Drivetrain drivetrain, Localizer localizer) 
+    {
+        switch(level) 
+        {
             case 1: 
                 return RightL1.create(isRed, drivetrain);
             case 2:

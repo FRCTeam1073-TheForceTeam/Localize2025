@@ -1,27 +1,20 @@
 package frc.robot.commands;
 
-import java.util.ArrayList;
-
 import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.ScheduleCommand;
 import frc.robot.commands.Path.PathFeedback;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Localizer;
-import frc.robot.subsystems.MathUtils;
 
-public class DrivePath extends Command {
+public class DrivePath extends Command
+{
   /** Creates a new DriveThroughTrajectory. */
 
   double distanceTolerance = 0.1;
@@ -29,7 +22,6 @@ public class DrivePath extends Command {
 
   Drivetrain drivetrain;
   Pose2d robotPose;
-  ChassisSpeeds speeds;
   Path path;
   Localizer localizer;
   int currentSegmentIndex = -1;
@@ -77,6 +69,7 @@ public class DrivePath extends Command {
       0.01
     );
     SmartDashboard.putString("DrivePath/Status","Idle");
+    addRequirements(ds);
   }
 
   // Called when the command is initially scheduled.
@@ -88,7 +81,8 @@ public class DrivePath extends Command {
     // currentSegmentIndex = path.closestSegment(drivetrain.getOdometry());   
     currentSegmentIndex = 0; 
 
-    if (currentSegmentIndex != -1 && path.segments.get(currentSegmentIndex).entryCommand != null) {
+    if (currentSegmentIndex != -1 && path.segments.get(currentSegmentIndex).entryCommand != null) 
+    {
       CommandScheduler.getInstance().schedule(path.segments.get(currentSegmentIndex).entryCommand);
     }
 
@@ -155,11 +149,13 @@ public class DrivePath extends Command {
 
     SmartDashboard.putNumber("DrivePath/TrajFBVx", pathFeedback.velocity.get(0,0));
     SmartDashboard.putNumber("DrivePath/TrajFBVy", pathFeedback.velocity.get(1,0));
+    SmartDashboard.putNumber("DrivePath/MaxVelocity", maxVelocity);
 
     SmartDashboard.putNumber("DrivePath/TrajVx", fcSpeeds.vxMetersPerSecond);
     SmartDashboard.putNumber("DrivePath/TrajVy", fcSpeeds.vyMetersPerSecond);
     SmartDashboard.putNumber("DrivePath/TrajW", fcSpeeds.omegaRadiansPerSecond);
     SmartDashboard.putString("DrivePath/Status", String.format("Segment Index: %d", currentSegmentIndex));
+    SmartDashboard.putNumber("DrivePath/SegmentsSize", path.segments.size());
 
     // Controlled drive command with weights from our path segment feedback, set our two channels of schema output/w weights.
     drivetrain.setTargetChassisSpeeds(
@@ -170,6 +166,7 @@ public class DrivePath extends Command {
                     Rotation2d.fromDegrees(drivetrain.getHeadingDegrees()) // gets fused heading
                 )
             );
+    //drivetrain.setTargetChassisSpeeds(fcSpeeds);
   }
 
   // Called once the command ends or is interrupted.
@@ -177,20 +174,27 @@ public class DrivePath extends Command {
   public void end(boolean interrupted) 
   {
     // Set our schema output to full stop.
-    //TODO: set drivetrain command
-    //setTranslate(0,0,1);
-    //setRotate(0,1);
+    for (int i = 0; i < 999; i++)
+    {
+      System.out.println("AAAAAAAAAAAAAA");
+    }
+    drivetrain.setTargetChassisSpeeds(new ChassisSpeeds(0, 0, 0));
   }
 
   // Returns true when the command should end.
   @Override
-  public boolean isFinished() {
+  public boolean isFinished() 
+  {
 
-  if (currentSegmentIndex < 0) return true; // Finished if we don't have a good index.
+  if (currentSegmentIndex < 0) 
+  {
+    return true; // Finished if we don't have a good index.
+  }
+  
 
   // Otherwise check our segment, and manage command launch as we move along segments.
   Path.Segment seg = path.segments.get(currentSegmentIndex);
-  if (path.atEndPoint(currentSegmentIndex, drivetrain.getOdometry())) 
+  if (path.atEndPoint(currentSegmentIndex, localizer.getPose())) 
   {
 
     // Cancel entry comamnd for this segment:

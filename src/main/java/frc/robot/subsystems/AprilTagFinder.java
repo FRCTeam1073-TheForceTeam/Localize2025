@@ -195,8 +195,8 @@ public class AprilTagFinder extends SubsystemBase
     SmartDashboard.putNumber("Total Tags Seen", responseFL.size() + responseFR.size());
     if(getMeasurements().size() > 0) 
     {
-      SmartDashboard.putNumber("FL Measurement X", getMeasurements().get(0).pose.getX());
-      SmartDashboard.putNumber("FL Measurement Y", getMeasurements().get(0).pose.getY());
+      //SmartDashboard.putNumber("FL Measurement X", getMeasurements().get(0).pose.getX());
+      //SmartDashboard.putNumber("FL Measurement Y", getMeasurements().get(0).pose.getY());
     }
   }
 }
