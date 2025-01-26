@@ -41,7 +41,7 @@ public class Localizer extends SubsystemBase
     private double StdDevX = 0.5;
     private double StdDevY = 0.5;
     private double StdDevA = 0.5;
-    private double timeGap = 1.0;
+    private double timeGap = 0.5;
     private double linearSpeedThreshold = 2.5; // TODO: get actual numbers here
     private double angularSpeedThreshold = 1.5; // TODO: get actual numbers here
 

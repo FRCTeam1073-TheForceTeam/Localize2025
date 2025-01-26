@@ -6,13 +6,25 @@ package frc.robot.commands.Autos;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import frc.robot.subsystems.Drivetrain;
 
 /** Add your docs here. */
 public class AutoLeftStart 
 {
-    public static Command create(int level, boolean isRed)
+    public static Command create(int level, boolean isRed, Drivetrain drivetrain)
     {
-        //TODO: fill out this auto por favor
-        return new WaitCommand(5);
+        switch (level)
+        {
+            case 1: 
+               return LeftL1.create(isRed, drivetrain);
+            case 2:
+               return LeftL2.create(isRed, drivetrain);
+            case 3:
+               return LeftL3.create(isRed, drivetrain);
+            case 4:
+               return LeftL4.create(isRed, drivetrain);
+            default:
+            return new WaitCommand(0);
+        }
     }
 }

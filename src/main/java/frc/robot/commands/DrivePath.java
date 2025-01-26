@@ -52,11 +52,12 @@ public class DrivePath extends Command {
   * @param ds
   * @param path
   */
-  public DrivePath(Drivetrain ds, Path path) 
+  public DrivePath(Drivetrain ds, Path path, Localizer localizer) 
   {
     // Use addRequirements() here to declare subsystem dependencies.
     drivetrain = ds;
     this.path = path;
+    this.localizer = localizer;
 
     xController = new PIDController(
       1.1, 
@@ -161,9 +162,14 @@ public class DrivePath extends Command {
     SmartDashboard.putString("DrivePath/Status", String.format("Segment Index: %d", currentSegmentIndex));
 
     // Controlled drive command with weights from our path segment feedback, set our two channels of schema output/w weights.
-    //TODO: set drivetrain command
-    //setTranslate(fcSpeeds.vxMetersPerSecond, fcSpeeds.vyMetersPerSecond, pathFeedback.translation_weight);
-    //setRotate(fcSpeeds.omegaRadiansPerSecond, pathFeedback.orientation_weight);
+    drivetrain.setTargetChassisSpeeds(
+                ChassisSpeeds.fromFieldRelativeSpeeds(
+                    xVelocity, 
+                    yVelocity,
+                    thetaVelocity, 
+                    Rotation2d.fromDegrees(drivetrain.getHeadingDegrees()) // gets fused heading
+                )
+            );
   }
 
   // Called once the command ends or is interrupted.

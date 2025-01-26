@@ -98,9 +98,8 @@ public class RobotContainer
     configureBindings();
   }
 
-  private void configureBindings() {
-    Trigger testCommand = new Trigger(m_OI::getDriverAButton);
-    testCommand.onTrue(m_AutoRightStartCommand.create(level, isRed, m_drivetrain));
+  private void configureBindings() 
+  { 
     
   }
 
@@ -143,11 +142,11 @@ public class RobotContainer
       case noPositionAuto:
         return null;
       case leftAuto:
-        return AutoLeftStart.create(level, isRed);
+        return AutoLeftStart.create(level, isRed, m_drivetrain);
       case rightAuto:
-        return AutoRightStart.create(level, isRed, m_drivetrain);
+        return AutoRightStart.create(level, isRed, m_drivetrain, m_localizer);
       case centerAuto:
-        return AutoCenterStart.create(level, isRed);
+        return AutoCenterStart.create(level, isRed, m_drivetrain);
       default:
         return null;
     }
