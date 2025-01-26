@@ -48,13 +48,10 @@ public class RobotContainer
   private final Localizer m_localizer = new Localizer(m_drivetrain, m_fieldMap, m_aprilTagFinder);
   private final MapDisplay m_MapDisplay = new MapDisplay(m_drivetrain, m_localizer, m_fieldMap);
 
-  private final AutoRightStart m_AutoRightStartCommand = new AutoRightStart();
-
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder);
 
   private boolean isRed;
   private int level;
-  private Pose2d where = new Pose2d();
 
   private final SendableChooser<String> m_positionChooser = new SendableChooser<>();
   private static final String noPositionAuto = "No Position";
@@ -111,7 +108,7 @@ public class RobotContainer
   public Command getAutonomousCommand() 
   {
    // return Commands.print("No autonomous command configured");
-   // negative 1 to indicate no auto select
+   // -1 to indicate no auto select
     switch(m_levelChooser.getSelected())
     {
       case noLevelAuto:
@@ -187,7 +184,7 @@ public class RobotContainer
   public boolean findStartPos() {
       //create a bool for pose is set
       double centerY = 4.026;
-      int sign = 1;
+      int allianceSign = 1;
       String selectedAuto = m_positionChooser.getSelected();
       
       double centerX = 8.774;
@@ -199,13 +196,13 @@ public class RobotContainer
       {
         DriverStation.Alliance alliance = DriverStation.getAlliance().get();
         if(alliance == Alliance.Blue) {
-          sign = -1;
+          allianceSign = -1;
         }
         if (selectedAuto.equals(leftAuto)) {
-          centerY -= sign * 2.013;
+          centerY -= allianceSign * 2.013;
         }
         else if(selectedAuto.equals(rightAuto)) {
-          centerY += sign * 2.013;
+          centerY += allianceSign * 2.013;
         }
   
         if (alliance == Alliance.Blue)
