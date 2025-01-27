@@ -31,6 +31,14 @@ public class Scan {
         return angle;
     }
 
+    public double getX(){
+        return x_robot;
+    }
+    
+    public double getY(){
+        return y_robot;
+    }
+
     public float getQuality(){
         return quality;
     }

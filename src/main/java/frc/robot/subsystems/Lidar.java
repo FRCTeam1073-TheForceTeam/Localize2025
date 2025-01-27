@@ -21,6 +21,8 @@ public class Lidar extends DiagnosticsSubsystem {
     ArrayList <Scan> two = new ArrayList<>();
     ArrayList <Scan> data = new ArrayList<>();
     ArrayList <Scan> ransac = new ArrayList<>();
+    ArrayList <Scan> inliers = new ArrayList<>();
+    ArrayList <Scan> bestInliers = new ArrayList<>(); // list of the best inliers for RANSAC
     byte getInfo[] = {(byte) 0xa5, (byte) 0x52};
     byte scanDescriptor[] = {(byte) 0xa5, (byte) 0x5a, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x81};
     byte stopCommand[] = {(byte) 0xa5, (byte) 0x25};
@@ -36,6 +38,12 @@ public class Lidar extends DiagnosticsSubsystem {
     double timestamp = 0.0;
     double x_l;
     double y_l;
+    double a; // a value for standard form of a line
+    double b; // b value for standard form of a line
+    double c; // c value for standard form of a line
+    double[] bestLine = new double[3]; // a, b, and c value of the best line
+    final double distanceThreshold = 0; // maximum distance a point can be from the line to be considered an inlier
+    double distance;
     float angle_deg;
     float angle_rad;
     float quality;
@@ -48,6 +56,8 @@ public class Lidar extends DiagnosticsSubsystem {
     final int minAcceptedAngle2 = 280; // In degrees, for the second range of accepted angles
     final int maxAcceptedAngle2 = 360; // In degrees, for the second range of accepted angles
     private final int minAcceptedQuality = 5;
+    final int minInliers = 10; // minimum number of inliers for a model to be considered valid
+    final int maxIterations = 100; // maximum number of iterations to find a model
     int minSamples;
     int numBytesAvail = 0;
     int numTimesLidarArraySwitch = 0;
@@ -107,11 +117,32 @@ public class Lidar extends DiagnosticsSubsystem {
     * Repeat until you found the model with the lowest cost */
     public void lidarRANSAC(){
         ransac = getLidarArray();
-        point1 = ransac.get((int) Math.random() * ransac.size());
-        point2 = ransac.get((int) Math.random() * ransac.size());
-        while(point1 == point2){
-            point2 = ransac.get((int) Math.random() * ransac.size());
+        for(int i = 0; i < maxIterations; i++){
+            // select two random points
+            point1 = ransac.get((int) (Math.random() * ransac.size()));
+            point2 = ransac.get((int) (Math.random() * ransac.size()));
+            while(point1 == point2){
+                point2 = ransac.get((int) Math.random() * ransac.size());
+            }
+            a = point2.getY() - point1.getY();
+            b = point1.getX() - point2.getX();
+            c = point1.getY() * point2.getX() - point2.getY() * point1.getX();
+            for(Scan scan : ransac){
+                distance = Math.abs(a * scan.getX() + b * scan.getY() + c) / Math.sqrt(a * a + b * b);
+                if(distance < distanceThreshold){
+                    inliers.add(scan);
+                }
+            }
+            if(inliers.size() > bestInliers.size()){
+                bestInliers = inliers;
+                bestLine = new double[] {a, b, c};
+            }
+            inliers.clear();
         }
+        if(bestLine != null){
+            System.out.printf("Best line: %.2fx + %.2fy + %.2f = 0%n", bestLine[0], bestLine[1], bestLine[2]);
+        }
+        else System.out.println("No valid line found.");
         
     }
 
