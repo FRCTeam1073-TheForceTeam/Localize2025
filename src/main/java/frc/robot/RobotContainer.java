@@ -122,7 +122,8 @@ public class RobotContainer
     }
 
 
-    switch(m_positionChooser.getSelected()){
+    switch(m_positionChooser.getSelected())
+    {
       case noPositionAuto:
         return null;
       case leftAuto:
@@ -161,14 +162,17 @@ public class RobotContainer
     return null;
   }
 
-  public Command getDisabledCommand() {
+  public Command getDisabledCommand() 
+  {
     return null;
   }
 
-  public void disabledInit() {
+  public void disabledInit() 
+  {
   }
 
-  public boolean findStartPos() {
+  public boolean findStartPos() 
+  {
       //create a bool for pose is set
       double centerY = 4.026;
       int allianceSign = 1;
@@ -217,7 +221,8 @@ public class RobotContainer
       return false;
   }
 
-  public boolean disabledPeriodic() {
+  public boolean disabledPeriodic() 
+  {
     return findStartPos();
   }
 }

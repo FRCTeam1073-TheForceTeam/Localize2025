@@ -7,6 +7,8 @@ package frc.robot.commands;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -14,7 +16,7 @@ import frc.robot.subsystems.AprilTagFinder;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.OI;
 
-public class TeleopDrive extends SchemaArbiter 
+public class TeleopDrive extends Command 
 {
   double angleTolerance = 0.05;
   double startAngle;
@@ -22,7 +24,7 @@ public class TeleopDrive extends SchemaArbiter
   ChassisSpeeds chassisSpeeds;
   Pose2d Rotation;
   Pose2d robotRotation;
-  Drivetrain m_drivetrain;
+  Drivetrain drivetrain;
   OI m_OI;
   private boolean fieldCentric;
   private boolean parked = false;
@@ -31,8 +33,6 @@ public class TeleopDrive extends SchemaArbiter
   double last_time = 0; //for snap-to-positions derivative
   boolean lastParkingBreakButton = false;
   boolean lastRobotCentricButton = false;
-  TeleopTranslateSchema translateSchema;
-  TeleopRotateSchema rotateSchema;
   boolean pointAtTarget;
   AprilTagFinder aprilTagFinder;
 
@@ -41,17 +41,24 @@ public class TeleopDrive extends SchemaArbiter
   // Teleop drive velocity scaling:
   private final static double maximumLinearVelocity = 3.5;   // Meters/second
   private final static double maximumRotationVelocity = 4.0; // Radians/second
+  private double mult1;
+  private double mult2;
+  private double leftX;
+  private double leftY;
+  private double rightX;
+  private double vx;
+  private double vy;
+  private double w;
 
 
   /** Creates a new Teleop. */
-  public TeleopDrive(Drivetrain ds, OI oi, AprilTagFinder finder) 
+  public TeleopDrive(Drivetrain drivetrain, OI oi, AprilTagFinder finder) 
   {
-    super(ds, true, false);
-    super.setName("Teleop Drive");
-    m_drivetrain = ds;
+  
+    this.drivetrain = drivetrain;
     m_OI = oi;
     fieldCentric = true;
-    startAngle = ds.getHeadingDegrees();
+    startAngle = drivetrain.getHeadingDegrees();
     desiredAngle = startAngle;
     pointAtTarget = false;
     snapPidProfile = new PIDController(
@@ -59,13 +66,8 @@ public class TeleopDrive extends SchemaArbiter
       0.0, 
       0.0);
     aprilTagFinder = finder;
-    translateSchema = new TeleopTranslateSchema(m_OI, maximumLinearVelocity);
-    rotateSchema = new TeleopRotateSchema(m_OI, maximumRotationVelocity);
-    addSchema(translateSchema);
-    addSchema(rotateSchema);
-    // addSchema(turn180Schema);
     // Use addRequirements() here to declare subsystem dependencies.
-    addRequirements(ds);
+    addRequirements(drivetrain);
   }
 
   public void initPreferences()
@@ -88,19 +90,10 @@ public class TeleopDrive extends SchemaArbiter
   @Override
   public void execute()
   {
-    
-    rotateSchema.setActive(true);
-    SmartDashboard.putBoolean("Rotate Schema Active", rotateSchema.getActive());
+    leftY = m_OI.getDriverTranslateY();
+    leftX = m_OI.getDriverTranslateX();
+    rightX = m_OI.getDriverRotate();
 
-    if(m_OI.getDriverRightBumper()){
-      fieldCentric = false;
-      setFieldCentric(false);
-    }
-    else{
-      fieldCentric = true;
-      setFieldCentric(true);
-    }
-    SmartDashboard.putBoolean("Field Centric", fieldCentric);
     SmartDashboard.putBoolean("Parking Brake", parked);
 
     if(m_OI.getDriverLeftBumper() && lastParkingBreakButton == false)
@@ -108,29 +101,51 @@ public class TeleopDrive extends SchemaArbiter
       parked = !parked;
     }
     lastParkingBreakButton = m_OI.getDriverLeftBumper();
-    if(parked && !m_drivetrain.getParkingBrake())
+    if(parked && !drivetrain.getParkingBrake())
     {
-      m_drivetrain.parkingBrake(true);
+      drivetrain.parkingBrake(true);
     }
-    if(!parked && m_drivetrain.getParkingBrake())
+    if(!parked && drivetrain.getParkingBrake())
     {
-      m_drivetrain.parkingBrake(false);
+      drivetrain.parkingBrake(false);
     }
     else 
     { 
-      translateSchema.update(m_drivetrain);
-      rotateSchema.update(m_drivetrain);
+      //multiples the angle by a number from 1 to the square root of 30:
+        mult1 = 1.0 + (m_OI.getDriverLeftTrigger() * ((Math.sqrt(25)) - 1));
+        mult2 = 1.0 + (m_OI.getDriverRightTrigger() * ((Math.sqrt(25)) - 1));
+
+        
+
+        //sets deadzones on the controller to extend to .05:
+        if(Math.abs(leftY) < .15) {leftY = 0;}
+        if(Math.abs(leftX) < .15) {leftX = 0;}
+        if(Math.abs(rightX) < .15) {rightX = 0;}
+
+        vx = MathUtil.clamp((-leftY * maximumLinearVelocity / 25 ) * mult1 * mult2, -maximumLinearVelocity, maximumLinearVelocity);
+        vy = MathUtil.clamp((-leftX * maximumLinearVelocity / 25 ) * mult1 * mult2, -maximumLinearVelocity, maximumLinearVelocity);
+        w = MathUtil.clamp(-(rightX * maximumRotationVelocity / 25) * mult1 * mult2, -maximumRotationVelocity, maximumRotationVelocity);
+
+        drivetrain.setTargetChassisSpeeds(
+                ChassisSpeeds.fromFieldRelativeSpeeds(
+                    vx, 
+                    vy,
+                    w, 
+                    Rotation2d.fromDegrees(drivetrain.getHeadingDegrees()) // gets fused heading
+                )
+            );
     }
     
     // Allow driver to zero the drive subsystem heading for field-centric control.
-    if(m_OI.getDriverMenuButton()){
-      m_drivetrain.zeroHeading();
+    if(m_OI.getDriverMenuButton())
+    {
+      drivetrain.zeroHeading();
     }
 
     if(m_OI.getDriverAButton()){
       Rotation2d zeroRotate = new Rotation2d();
       Pose2d zero = new Pose2d(0.0, 0.0, zeroRotate);
-      m_drivetrain.resetOdometry(zero);
+      drivetrain.resetOdometry(zero);
     }
 
 
