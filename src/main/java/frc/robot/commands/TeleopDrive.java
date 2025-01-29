@@ -5,7 +5,6 @@
 package frc.robot.commands;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.math.MathUtil;
@@ -68,14 +67,6 @@ public class TeleopDrive extends Command
     aprilTagFinder = finder;
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(drivetrain);
-  }
-
-  public void initPreferences()
-  {
-    Preferences.initDouble("Snap to Position P", 0.1);
-    Preferences.initDouble("Snap to Position I", 0);
-    Preferences.initDouble("Snap to Position D", 0);
-    Preferences.initDouble("Snap to Position Max Acceleration", 0.5);
   }
 
   // Called when the command is initially scheduled.

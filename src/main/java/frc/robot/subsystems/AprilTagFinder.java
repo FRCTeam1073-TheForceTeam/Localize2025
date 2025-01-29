@@ -113,7 +113,7 @@ public class AprilTagFinder extends SubsystemBase
       measurements.add(new VisionMeasurement(robotPoseFL.toPose2d(), responseFLTimestamp, targetFL.getFiducialId(), range));
     }
     
-    // front right camera
+    // front right cameras
     PhotonTrackedTarget targetFR = frontRightCam.getLatestResult().getBestTarget();
     if (targetFR != null && FieldMap.fieldMap.getTagPose(targetFR.getFiducialId()).isPresent())
     {

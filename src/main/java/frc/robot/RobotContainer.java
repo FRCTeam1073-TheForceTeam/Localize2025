@@ -23,7 +23,6 @@ import frc.robot.subsystems.FieldMap;
 import frc.robot.subsystems.Localizer;
 import frc.robot.subsystems.MapDisplay;
 import frc.robot.subsystems.OI;
-import frc.robot.subsystems.SwerveModuleConfig;
 
 public class RobotContainer 
 {
@@ -147,14 +146,6 @@ public class RobotContainer
     allOK = true;
     //TODO: Add each subsystem
     SmartDashboard.putBoolean("Engine light", allOK);
-  }
-
-  public static void initPreferences()
-  {
-    System.out.println("RobotContainer: init Preferences.");
-    SwerveModuleConfig.initPreferences();
-    //OI.initPreferences();
-    //SwerveModule.initPreferences();
   }
 
   public Command getTeleopCommand()

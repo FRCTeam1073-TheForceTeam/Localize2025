@@ -72,11 +72,6 @@ public class SwerveModule extends DiagnosticsBase implements Sendable
         configureHardware();
     }
 
-    public static void initPreferences() 
-    {
-  
-    }
-
     @Override
     public boolean updateDiagnostics() {
         // Check the CANCoder.
