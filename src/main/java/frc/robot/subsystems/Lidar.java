@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
+import java.util.random.*;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
@@ -17,12 +19,12 @@ public class Lidar extends DiagnosticsSubsystem {
     SerialPort serialPort = new SerialPort(460800, SerialPort.Port.kUSB1, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
     private final int bytesPerScan = 5;
     //private final double elevationFactor = 0.94293; //0.97237; //compensating for the fact that it's not level: cos(angle of rangeFinder)
-    ArrayList <Scan> one = new ArrayList<>();
-    ArrayList <Scan> two = new ArrayList<>();
-    ArrayList <Scan> data = new ArrayList<>();
-    ArrayList <Scan> ransac = new ArrayList<>();
-    ArrayList <Scan> inliers = new ArrayList<>();
-    ArrayList <Scan> bestInliers = new ArrayList<>(); // list of the best inliers for RANSAC
+    ArrayList <Scan> one = new ArrayList<Scan>();
+    ArrayList <Scan> two = new ArrayList<Scan>();
+    ArrayList <Scan> data = new ArrayList<Scan>();
+    ArrayList <Scan> ransac = new ArrayList<Scan>();
+    ArrayList <Scan> inliers = new ArrayList<Scan>();
+    ArrayList <Scan> bestInliers = new ArrayList<Scan>(); // list of the best inliers for RANSAC
     byte getInfo[] = {(byte) 0xa5, (byte) 0x52};
     byte scanDescriptor[] = {(byte) 0xa5, (byte) 0x5a, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x81};
     byte stopCommand[] = {(byte) 0xa5, (byte) 0x25};
@@ -42,7 +44,7 @@ public class Lidar extends DiagnosticsSubsystem {
     double b; // b value for standard form of a line
     double c; // c value for standard form of a line
     double[] bestLine = new double[3]; // a, b, and c value of the best line
-    final double distanceThreshold = 0; // maximum distance a point can be from the line to be considered an inlier
+    final double distanceThreshold = 1.5; // maximum distance a point can be from the line to be considered an inlier
     double distance;
     float angle_deg;
     float angle_rad;
@@ -57,7 +59,7 @@ public class Lidar extends DiagnosticsSubsystem {
     final int maxAcceptedAngle2 = 360; // In degrees, for the second range of accepted angles
     private final int minAcceptedQuality = 5;
     final int minInliers = 10; // minimum number of inliers for a model to be considered valid
-    final int maxIterations = 100; // maximum number of iterations to find a model
+    final int maxIterations = 20; // maximum number of iterations to find a model
     int minSamples;
     int numBytesAvail = 0;
     int numTimesLidarArraySwitch = 0;
@@ -67,6 +69,7 @@ public class Lidar extends DiagnosticsSubsystem {
     int rawDataByte;
     Transform2d robotToLidar = new Transform2d(new Translation2d(0.27, 0), new Rotation2d()); // Translation needs x and y, rotation needs 
     Matrix<N3,N3> T;
+    Random randy = new Random();
     Scan point1;
     Scan point2;
 
@@ -117,13 +120,17 @@ public class Lidar extends DiagnosticsSubsystem {
     * Repeat until you found the model with the lowest cost */
     public void lidarRANSAC(){
         ransac = getLidarArray();
-        for(int i = 0; i < maxIterations; i++){
+        bestInliers.clear();
+        for(int i = 0; i < 10; i++){
             // select two random points
-            point1 = ransac.get((int) (Math.random() * ransac.size()));
-            point2 = ransac.get((int) (Math.random() * ransac.size()));
+
+            inliers.clear();
+            point1 = ransac.get(randy.nextInt(ransac.size()));
+            point2 = ransac.get(randy.nextInt(ransac.size()));
             while(point1 == point2){
-                point2 = ransac.get((int) Math.random() * ransac.size());
+                point2 = ransac.get(randy.nextInt(ransac.size()));
             }
+
             a = point2.getY() - point1.getY();
             b = point1.getX() - point2.getX();
             c = point1.getY() * point2.getX() - point2.getY() * point1.getX();
@@ -131,19 +138,26 @@ public class Lidar extends DiagnosticsSubsystem {
                 distance = Math.abs(a * scan.getX() + b * scan.getY() + c) / Math.sqrt(a * a + b * b);
                 if(distance < distanceThreshold){
                     inliers.add(scan);
+                    // give first and last inlier
+                    // when there's a large gap, drop points
                 }
             }
-            if(inliers.size() > bestInliers.size()){
+            // if it's greater than the threshold and better
+            if(inliers.size() > bestInliers.size() && inliers.size() > 8){
                 bestInliers = inliers;
                 bestLine = new double[] {a, b, c};
             }
-            inliers.clear();
         }
         if(bestLine != null){
-            System.out.printf("Best line: %.2fx + %.2fy + %.2f = 0%n", bestLine[0], bestLine[1], bestLine[2]);
+            SmartDashboard.putBoolean("Found a Line", true);
+            SmartDashboard.putNumber("Line A Value", a);
+            SmartDashboard.putNumber("Line B Value", b);
+            SmartDashboard.putNumber("Line C Value", c);
         }
-        else System.out.println("No valid line found.");
-        
+        else {
+            SmartDashboard.putBoolean("Found a Line", false);
+        }
+        //return bestLine;
     }
 
     public ArrayList<Scan> getLidarArray(){
@@ -192,17 +206,18 @@ public class Lidar extends DiagnosticsSubsystem {
             offset = i * bytesPerScan;
             recordScan = true;
            if((rawData[offset] & 0x003) == 1){
-                // print out bytes
-                System.out.println(String.format("Angle Bytes: 0x%02x 0x%02x", rawData[offset + 1], rawData[offset + 2]));
-
+                
                 if(writeToOne){
                     //done writing to one, switching to writing to two - sets the timestamp for array two
                     two.clear();
                     arrayTwoTimestamp = Timer.getFPGATimestamp();
                     numTimesLidarArraySwitch ++;
                     writeToOne = false;
+                    if(arrayTwoFilled){
+                        lidarRANSAC();
+                    }
                 }
-
+// TODO: Go through code and put in hooks so it will run if no LiDAR
                 else {
                     //done writing to two, switching to writing to one - sets the timestamp for array one
                     one.clear();
@@ -210,6 +225,7 @@ public class Lidar extends DiagnosticsSubsystem {
                     numTimesLidarArraySwitch ++;
                     arrayTwoFilled = true;
                     writeToOne = true;
+                    lidarRANSAC();
                 }
             } 
             // TODO: print out number of scans we got, map out scans?, put angle filter (only care abt certain angles), range filter
@@ -296,23 +312,23 @@ public class Lidar extends DiagnosticsSubsystem {
     }
 
     public double getRange(){
-        return getLidarArray().get(1).getRange();
+        return getLidarArray().get(0).getRange();
     }
 
     public double getAngle(){
-        return getLidarArray().get(1).getAngle();
+        return getLidarArray().get(0).getAngle();
     }
     
     public double getQuality(){
-        return getLidarArray().get(1).getQuality();
+        return getLidarArray().get(0).getQuality();
     }
 
     public double getXVal(){
-        return getLidarArray().get(1).getX();
+        return getLidarArray().get(0).getX();
     }
     
     public double getYVal(){
-        return getLidarArray().get(1).getY();
+        return getLidarArray().get(0).getY();
     }
 
     @Override
