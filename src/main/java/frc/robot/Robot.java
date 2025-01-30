@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -12,6 +13,8 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private RobotContainer m_robotContainer;
+
+  private boolean haveInitStartPos = false;
 
   @Override
   public void robotInit() {
@@ -24,16 +27,25 @@ public class Robot extends TimedRobot {
   }
 
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    haveInitStartPos = false;
+    m_robotContainer.disabledInit();
+  }
 
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+    if(!haveInitStartPos) {
+      haveInitStartPos = m_robotContainer.disabledPeriodic();
+    }
+    SmartDashboard.putBoolean("Have Initialized Start Pos", haveInitStartPos);
+  }
 
   @Override
   public void disabledExit() {}
 
   @Override
   public void autonomousInit() {
+    m_robotContainer.autonomousInit();
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     if (m_autonomousCommand != null) {
