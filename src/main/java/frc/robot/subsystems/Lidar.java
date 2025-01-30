@@ -24,7 +24,9 @@ public class Lidar extends DiagnosticsSubsystem {
     ArrayList <Scan> data = new ArrayList<Scan>();
     ArrayList <Scan> ransac = new ArrayList<Scan>();
     ArrayList <Scan> inliers = new ArrayList<Scan>();
+    ArrayList <Scan> points  = new ArrayList<Scan>();
     ArrayList <Scan> bestInliers = new ArrayList<Scan>(); // list of the best inliers for RANSAC
+    Scan[] startAndEnd = new Scan[2];
     byte getInfo[] = {(byte) 0xa5, (byte) 0x52};
     byte scanDescriptor[] = {(byte) 0xa5, (byte) 0x5a, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x81};
     byte stopCommand[] = {(byte) 0xa5, (byte) 0x25};
@@ -33,6 +35,9 @@ public class Lidar extends DiagnosticsSubsystem {
     boolean recordScan = true;
     boolean measureMode = false;
     boolean writeToOne = true;
+    boolean searchingForStart = true;
+    boolean searchingForEnd = false;
+    boolean foundLine = false;
     double arrayOneTimestamp;
     double arrayTwoTimestamp;
     double filtered_range = 0.0;
@@ -44,7 +49,7 @@ public class Lidar extends DiagnosticsSubsystem {
     double b; // b value for standard form of a line
     double c; // c value for standard form of a line
     double[] bestLine = new double[3]; // a, b, and c value of the best line
-    final double distanceThreshold = 1.5; // maximum distance a point can be from the line to be considered an inlier
+    final double distanceThreshold = 0.5; // maximum distance a point can be from the line to be considered an inlier
     double distance;
     float angle_deg;
     float angle_rad;
@@ -60,6 +65,8 @@ public class Lidar extends DiagnosticsSubsystem {
     private final int minAcceptedQuality = 5;
     final int minInliers = 10; // minimum number of inliers for a model to be considered valid
     final int maxIterations = 20; // maximum number of iterations to find a model
+    int indexOfBeginnning;
+    int indexOfEnd;
     int minSamples;
     int numBytesAvail = 0;
     int numTimesLidarArraySwitch = 0;
@@ -67,6 +74,7 @@ public class Lidar extends DiagnosticsSubsystem {
     int numScansToRead;
     int offset;
     int rawDataByte;
+    int pointsOnLine;
     Transform2d robotToLidar = new Transform2d(new Translation2d(0.27, 0), new Rotation2d()); // Translation needs x and y, rotation needs 
     Matrix<N3,N3> T;
     Random randy = new Random();
@@ -118,7 +126,7 @@ public class Lidar extends DiagnosticsSubsystem {
     * Fit a mathematical model (line, curve, 3d shape, ...)
     * Compute a cost by checking how many points fit the model
     * Repeat until you found the model with the lowest cost */
-    public void lidarRANSAC(){
+    public ArrayList<Scan> lidarRANSAC(){
         ransac = getLidarArray();
         bestInliers.clear();
         for(int i = 0; i < 10; i++){
@@ -143,7 +151,7 @@ public class Lidar extends DiagnosticsSubsystem {
                 }
             }
             // if it's greater than the threshold and better
-            if(inliers.size() > bestInliers.size() && inliers.size() > 8){
+            if(inliers.size() > bestInliers.size() && inliers.size() > 15){
                 bestInliers = inliers;
                 bestLine = new double[] {a, b, c};
             }
@@ -153,11 +161,63 @@ public class Lidar extends DiagnosticsSubsystem {
             SmartDashboard.putNumber("Line A Value", a);
             SmartDashboard.putNumber("Line B Value", b);
             SmartDashboard.putNumber("Line C Value", c);
+            return bestInliers;
         }
         else {
             SmartDashboard.putBoolean("Found a Line", false);
+            return null;
         }
-        //return bestLine;
+    }
+    // test if points are close together ( 5- 10 cm), searching and finding segment
+    // searching for beginning or searching for the end
+    // index of beginning and end
+    // outputs endpoint
+    public Scan[] findLineSegment(ArrayList<Scan> arr){
+        points = arr;
+        pointsOnLine = 0;
+        searchingForStart = true;
+        searchingForEnd = false;
+        foundLine = false;
+        SmartDashboard.putBoolean("Found Line", foundLine);
+        for(int i = 0; i < points.size() - 1; i++){
+            if(searchingForStart){
+                if((points.get(i).getY() - points.get(i + 1).getY()) / (points.get(i).getX() - points.get(i + 1).getX()) <= 7){
+                    indexOfBeginnning = i;
+                    searchingForStart = false;
+                    searchingForEnd = true;
+                    pointsOnLine = 1;
+                }
+            }
+            if(searchingForEnd){
+                if((points.get(i).getY() - points.get(i + 1).getY()) / (points.get(i).getX() - points.get(i + 1).getX()) <= 7){
+                    pointsOnLine ++;
+                }
+                else if((points.get(i).getY() - points.get(i + 1).getY()) / (points.get(i).getX() - points.get(i + 1).getX()) > 7){
+                    if(pointsOnLine >= 10){
+                        indexOfEnd = i;
+                        foundLine = true;
+                        break;
+                    }
+                    else{
+                        searchingForStart = true;
+                        searchingForEnd = false;
+                        pointsOnLine = 0;
+                    }
+                }
+            }
+        }
+        if(pointsOnLine >= 10){
+            startAndEnd[0] = points.get(indexOfBeginnning);
+            startAndEnd[1] = points.get(indexOfEnd);
+            SmartDashboard.putNumber("Start Point X", startAndEnd[0].getX());
+            SmartDashboard.putNumber("Start Point Y", startAndEnd[0].getY());
+            SmartDashboard.putNumber("End Point X", startAndEnd[1].getX());
+            SmartDashboard.putNumber("End Point Y", startAndEnd[1].getY());
+            SmartDashboard.putBoolean("Found Line", foundLine);
+
+            return startAndEnd;
+        }
+        return null;
     }
 
     public ArrayList<Scan> getLidarArray(){
@@ -206,7 +266,6 @@ public class Lidar extends DiagnosticsSubsystem {
             offset = i * bytesPerScan;
             recordScan = true;
            if((rawData[offset] & 0x003) == 1){
-                
                 if(writeToOne){
                     //done writing to one, switching to writing to two - sets the timestamp for array two
                     two.clear();
@@ -214,7 +273,7 @@ public class Lidar extends DiagnosticsSubsystem {
                     numTimesLidarArraySwitch ++;
                     writeToOne = false;
                     if(arrayTwoFilled){
-                        lidarRANSAC();
+                        findLineSegment(lidarRANSAC());
                     }
                 }
 // TODO: Go through code and put in hooks so it will run if no LiDAR
@@ -225,7 +284,7 @@ public class Lidar extends DiagnosticsSubsystem {
                     numTimesLidarArraySwitch ++;
                     arrayTwoFilled = true;
                     writeToOne = true;
-                    lidarRANSAC();
+                    findLineSegment(lidarRANSAC());
                 }
             } 
             // TODO: print out number of scans we got, map out scans?, put angle filter (only care abt certain angles), range filter
