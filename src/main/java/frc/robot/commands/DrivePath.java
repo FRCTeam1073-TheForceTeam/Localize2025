@@ -53,19 +53,19 @@ public class DrivePath extends Command
 
     xController = new PIDController(
       1.1, 
-      0.05, 
+      0.0, 
       0.01
     );
 
     yController = new PIDController(
       1.1, 
-      0.05, 
+      0.0, 
       0.01
     );
 
     thetaController = new PIDController(
       1.2, 
-      0.05,
+      0.0,
       0.01
     );
     SmartDashboard.putString("DrivePath/Status","Idle");
@@ -126,8 +126,8 @@ public class DrivePath extends Command
     if (currentSegmentIndex >= path.segments.size() - 1)
     {
       // Last point is meant to be a bit different:
-      xVelocity = xController.calculate(robotPose.getX(), pathFeedback.pose.getX());
-      yVelocity = yController.calculate(robotPose.getY(), pathFeedback.pose.getY());
+      xVelocity = xController.calculate(robotPose.getX(), pathFeedback.pose.getX()) + 0.3 * pathFeedback.velocity.get(0,0);
+      yVelocity = yController.calculate(robotPose.getY(), pathFeedback.pose.getY()) + 0.3 * pathFeedback.velocity.get(1,0);
       thetaVelocity = thetaController.calculate(robotPose.getRotation().getRadians(), path.finalOrientation);
     }
     else
@@ -163,7 +163,7 @@ public class DrivePath extends Command
                     xVelocity, 
                     yVelocity,
                     thetaVelocity, 
-                    Rotation2d.fromDegrees(drivetrain.getHeadingDegrees()) // gets fused heading
+                    Rotation2d.fromDegrees(localizer.getPose().getRotation().getDegrees()) // gets fused heading
                 )
             );
     //drivetrain.setTargetChassisSpeeds(fcSpeeds);

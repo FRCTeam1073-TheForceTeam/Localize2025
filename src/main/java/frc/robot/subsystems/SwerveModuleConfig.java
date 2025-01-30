@@ -43,22 +43,22 @@ public class SwerveModuleConfig
      */
     public SwerveModuleConfig()
     {
-        // driveP = Preferences.getDouble("Drive.Drive.Kp", 0.3); 
-        // driveI = Preferences.getDouble("Drive.Drive.Ki", 0.0);
-        // driveD = Preferences.getDouble("Drive.Drive.Kd", 0.001);
-        // driveF = Preferences.getDouble("Drive.Drive.Kf", 0.115);
-        // driveMaxIntegrator = Preferences.getDouble("Drive.Drive.MaxIntegrator", 400.0);
-        // driveCurrentLimit = Preferences.getDouble("Drive.Drive.CurrentLimit", 30);
-        // driveCurrentThreshold = Preferences.getDouble("Drive.Drive.CurrentThreshold", 35);
+        driveP = 0.3; 
+        driveI = 0.0;
+        driveD = 0.001;
+        driveF = 0.115;
+        driveMaxIntegrator = 400.0;
+        driveCurrentLimit = 30;
+        driveCurrentThreshold = 35;
 
 
-        // //tickPerRadian = Preferences.getDouble("Drive.Steer.TicksPerRadian", 4096.0/(2*Math.PI)); // 4,096 ticks per rotation, converted to radians
-        // steerP = Preferences.getDouble("Drive.Steer.Kp", 30.0); 
-        // steerI = Preferences.getDouble("Drive.Steer.Ki", 4.0);
-        // steerD = Preferences.getDouble("Drive.Steer.Kd", 1.0);
-        // steerF = Preferences.getDouble("Drive.Steer.Kf", 0.0);
-        // steerMaxIntegrator = Preferences.getDouble("Drive.Steer.MaxIntegrator", 400.0);
-        // steerCurrentLimit = Preferences.getDouble("Drive.Steer.CurrentLimit", 12);
-        // steerCurrentThreshold = Preferences.getDouble("Drive.Steer.CurrentThreshold", 15);
+        //tickPerRadian = Preferences.getDouble("Drive.Steer.TicksPerRadian", 4096.0/(2*Math.PI)); // 4,096 ticks per rotation, converted to radians
+        steerP = 30.0; 
+        steerI = 4.0;
+        steerD = 1.0;
+        steerF = 0.0;
+        steerMaxIntegrator = 400.0;
+        steerCurrentLimit = 12;
+        steerCurrentThreshold = 15;
     }
 }

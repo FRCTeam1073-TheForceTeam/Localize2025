@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /**
@@ -146,9 +147,12 @@ public class Path
      * @return
      */
     public double distanceToSegment(Vector<N2> start, Vector<N2> end, double length, Vector<N2> p, Vector<N2> projection) {
-        if (length < 0.001)  {
+        if (length < 0.001)  
+        {
             return (p.minus(start)).norm(); // Degenerate case
-        } else {
+        } 
+        else 
+        {
             // Parametric line point:
             double t = p.minus(start).dot(end.minus(start)) / length;
             // Clamp to a point on the segment.
@@ -156,7 +160,8 @@ public class Path
             if (t < 0.0) t = 0.0;
             var proj = start.plus(end.minus(start).times(t));
             // Store the projected point location if argument is not null.
-            if (projection != null) {
+            if (projection != null) 
+            {
                 projection.set(0,0,proj.get(0,0));
                 projection.set(1,0, proj.get(1,0));
             }
@@ -209,6 +214,7 @@ public class Path
         
         Vector<N2> Vp = new Vector<N2>(N2.instance);  // Output path velocity.
         Vector<N2> pos = positionToVector(location);  // Where are are.
+        double proportion;
 
         Segment seg = segments.get(segmentIndex);
         
@@ -217,12 +223,19 @@ public class Path
         Vector<N2> path_pos = new Vector<N2>(N2.instance);
         // Compute projection of current position onto path segment and the offset from the path segment.
         double path_offset = distanceToSegment(seg.start.position, seg.end.position, seg.length, pos, path_pos);
+        SmartDashboard.putNumber("Path/path_offset", path_offset);
 
-        if (path_offset < segments.get(segmentIndex).width) {
-            double proportion = path_offset / seg.width; /// 0 when we're dead-on, 1 when were at the offset.
+        if (path_offset < seg.width) 
+        {
+            proportion = path_offset / seg.width; /// 0 when we're dead-on, 1 when were at the offset.
             // Drive along the path and towards the path in proportion to error:
-            Vp = (path_pos.minus(pos).times(proportion * transverseVelocity)).plus(seg.dir.times((1.0 - proportion)*seg.velocity));
-        } else {
+            Vp = (path_pos.minus(pos).times(proportion * transverseVelocity)).plus(seg.dir.times((1.0 - proportion) * seg.velocity));
+            SmartDashboard.putNumber("Path/proportion", proportion);
+        } 
+        else
+        {
+            proportion = -1;
+            SmartDashboard.putNumber("Path/proportion", proportion);
             // Drive only toward the path to get back on it.
             Vp = path_pos.minus(pos).div(path_offset).times(transverseVelocity);
         }

@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import frc.robot.subsystems.AprilTagFinder;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.Localizer;
 import frc.robot.subsystems.OI;
 
 public class TeleopDrive extends Command 
@@ -34,6 +35,7 @@ public class TeleopDrive extends Command
   boolean lastRobotCentricButton = false;
   boolean pointAtTarget;
   AprilTagFinder aprilTagFinder;
+  Localizer localizer;
 
   PIDController snapPidProfile;
 
@@ -51,10 +53,11 @@ public class TeleopDrive extends Command
 
 
   /** Creates a new Teleop. */
-  public TeleopDrive(Drivetrain drivetrain, OI oi, AprilTagFinder finder) 
+  public TeleopDrive(Drivetrain drivetrain, OI oi, AprilTagFinder finder, Localizer localizer) 
   {
   
     this.drivetrain = drivetrain;
+    this.localizer = localizer;
     m_OI = oi;
     fieldCentric = true;
     startAngle = drivetrain.getHeadingDegrees();
@@ -117,12 +120,14 @@ public class TeleopDrive extends Command
         vy = MathUtil.clamp((-leftX * maximumLinearVelocity / 25 ) * mult1 * mult2, -maximumLinearVelocity, maximumLinearVelocity);
         w = MathUtil.clamp(-(rightX * maximumRotationVelocity / 25) * mult1 * mult2, -maximumRotationVelocity, maximumRotationVelocity);
 
+        SmartDashboard.putNumber("TeleopDrive/vx", vx);
+
         drivetrain.setTargetChassisSpeeds(
                 ChassisSpeeds.fromFieldRelativeSpeeds(
                     vx, 
                     vy,
                     w, 
-                    Rotation2d.fromDegrees(drivetrain.getHeadingDegrees()) // gets fused heading
+                    Rotation2d.fromDegrees(localizer.getPose().getRotation().getDegrees()) // gets fused heading
                 )
             );
     }

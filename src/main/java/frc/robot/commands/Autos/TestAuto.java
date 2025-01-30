@@ -18,14 +18,14 @@ public class TestAuto
         Point start = new Point(10, 6);
         Point point1 = new Point(15.1, 7); 
         Point point2 = new Point(15, 2);
-        Point point3 = new Point(11, 1);
+        Point point3 = new Point(11, 2);
 
         ArrayList<Segment> segments = new ArrayList<Segment>();
-        segments.add(new Segment(start, point1, 0, 1));
-        segments.add(new Segment(point1, point2, 0, 1));
-        segments.add(new Segment(point2, point3, 0, 1));
-        segments.add(new Segment(point3, start, 0, 1));
-        segments.add(new Segment(start, point1, 0, 1));
+        segments.add(new Segment(start, point1, 0, 2));
+        segments.add(new Segment(point1, point2, 0, 2));
+        segments.add(new Segment(point2, point3, 0, 2));
+        segments.add(new Segment(point3, start, 0, 2));
+        // segments.add(new Segment(start, point1, 0, 2));
 
         point2.blend_radius = 1;
 
