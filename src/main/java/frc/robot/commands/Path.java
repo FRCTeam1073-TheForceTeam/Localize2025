@@ -141,24 +141,34 @@ public class Path
      * 
      * @param start
      * @param end
-     * @param length
      * @param p
-     * @param projection
+     * @param projection - Output of closest point on the segment if non-null.
      * @return
      */
-    public double distanceToSegment(Vector<N2> start, Vector<N2> end, double length, Vector<N2> p, Vector<N2> projection) {
+    public double distanceToSegment(Vector<N2> start, Vector<N2> end, Vector<N2> p, Vector<N2> projection) {
+        double length = end.minus(start).norm();
+
         if (length < 0.001)  
         {
+            if (projection != null) {
+                // Degenerate case the projection point is basically at "start".
+                projection.set(0,0, start.get(0,0));
+                projection.set(1,0,start.get(1,0));
+            }
             return (p.minus(start)).norm(); // Degenerate case
         } 
         else 
         {
+            // Direction from start to end.
+            var dir = end.minus(start).div(length);
+
             // Parametric line point:
-            double t = p.minus(start).dot(end.minus(start)) / length;
+            double d = p.minus(start).dot(dir);
+
             // Clamp to a point on the segment.
-            if (t > 1.0) t = 1.0;
-            if (t < 0.0) t = 0.0;
-            var proj = start.plus(end.minus(start).times(t));
+            if (d > length) d = length; // Closest is end.
+            if (d < 0.0) d = 0.0; // Closest is start
+            var proj = start.plus(dir.times(d));
             // Store the projected point location if argument is not null.
             if (projection != null) 
             {
@@ -189,7 +199,7 @@ public class Path
         for (int segmentIndex = 0; segmentIndex < segments.size(); ++segmentIndex) {
             Segment seg = segments.get(segmentIndex);
 
-            double segDist = distanceToSegment(seg.start.position, seg.end.position, seg.length, pos, null);
+            double segDist = distanceToSegment(seg.start.position, seg.end.position, pos, null);
             if (segDist < closestDistance) {
                 closestIndex = segmentIndex;
                 closestDistance = segDist;
@@ -222,7 +232,7 @@ public class Path
         // we don't go along path, if we are close we go along the path.
         Vector<N2> path_pos = new Vector<N2>(N2.instance);
         // Compute projection of current position onto path segment and the offset from the path segment.
-        double path_offset = distanceToSegment(seg.start.position, seg.end.position, seg.length, pos, path_pos);
+        double path_offset = distanceToSegment(seg.start.position, seg.end.position, pos, path_pos);
         SmartDashboard.putNumber("Path/path_offset", path_offset);
 
         if (path_offset < seg.width) 
@@ -249,7 +259,7 @@ public class Path
         
         // Project the computed position onto the path segment as well to stay on segment and hit endpoints exactly.
         Vector<N2> ppp = new Vector<N2>(N2.instance);  /// projected path position point.
-        double notused = distanceToSegment(seg.start.position, seg.end.position, seg.length, pp, ppp);
+        double notused = distanceToSegment(seg.start.position, seg.end.position, pp, ppp);
 
         Pose2d pathPoint = new Pose2d(new Translation2d(ppp.get(0, 0), ppp.get(1, 0)), new Rotation2d(seg.orientation));
 
