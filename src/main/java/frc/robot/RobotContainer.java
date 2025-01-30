@@ -24,6 +24,9 @@ import frc.robot.subsystems.Localizer;
 import frc.robot.subsystems.MapDisplay;
 import frc.robot.subsystems.OI;
 
+import frc.robot.subsystems.SwerveModuleConfig;
+import frc.robot.subsystems.Lidar;
+
 public class RobotContainer 
 {
   private final Drivetrain m_drivetrain = new Drivetrain();
@@ -33,6 +36,7 @@ public class RobotContainer
   private final FieldMap m_fieldMap = new FieldMap();
   private final Localizer m_localizer = new Localizer(m_drivetrain, m_fieldMap, m_aprilTagFinder);
   private final MapDisplay m_MapDisplay = new MapDisplay(m_drivetrain, m_localizer, m_fieldMap);
+  private final Lidar m_lidar = new Lidar();
 
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder, m_localizer);
 
@@ -76,7 +80,7 @@ public class RobotContainer
 
     SmartDashboard.putData("Position Chooser", m_positionChooser);
     SmartDashboard.putData("Level Chooser", m_levelChooser);
-
+    SmartDashboard.putData(m_lidar);
 
     configureBindings();
   }
@@ -159,8 +163,7 @@ public class RobotContainer
   }
 
   public void disabledInit() 
-  {
-  }
+  {}
 
   public boolean findStartPos() 
   {
