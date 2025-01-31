@@ -1,7 +1,6 @@
 
 package frc.robot.commands;
 import java.util.ArrayList;
-import edu.wpi.first.math.Num;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -28,7 +27,7 @@ public class Path
     {
 
         public Vector<N2> position = new Vector<N2>(N2.instance);
-        public double     blend_radius = 0.2;     // Radius of bend/arrival at the point.
+        public double blend_radius = 0.2;     // Radius of bend/arrival at the point.
 
         public Point() {
             position.set(0,0,0.0);
@@ -54,7 +53,8 @@ public class Path
      * to adjust the direction vector. If start and end are equal points, the direction
      * is the zero vector.
      */
-    public static class Segment {
+    public static class Segment 
+    {
         public Point start;           // Start point on the segment. meters.
         public Point end;             // End point of the segment. meters.
         public Vector<N2> dir;        // Computed direction vector normal for segment.
@@ -62,8 +62,6 @@ public class Path
         public double orientation = 0.0;    // Desired orientation along the segment. Radians in field centric frame
         public double velocity = 1.0;       // Desired velocity along the segment. Shoudl always be positive m/s
         public double width = 1.0;    // Path width beyond which we stop trying to progress along the path.
-        public double orientation_weight = 1.0; // Desired orientation weight along this segment.
-        public double translation_weight = 1.0; // Desired translation weight along this segment.
         public Command entryCommand = null; // Command to schedule when segment is entered.
         public Command exitCommand = null;  // Command to schedule when segment is exited.
         public Activate entryActivate = null;
@@ -71,7 +69,8 @@ public class Path
         public boolean entryActivateValue = false;
         public boolean exitActivateValue = false;
 
-        public Segment(Point start, Point end, double orientation, double velocity) {
+        public Segment(Point start, Point end, double orientation, double velocity) 
+        {
             this.start = start;
             this.end = end;
             updateDirection();
@@ -79,13 +78,17 @@ public class Path
             this.velocity = velocity;
         }
 
-        public void updateDirection() {
+        public void updateDirection() 
+        {
             length = end.position.minus(start.position).norm();
 
             // Compute a direction vector for the segment.
-            if (length > 0.001) {
+            if (length > 0.001) 
+            {
                 this.dir = end.position.minus(start.position).div(length);
-            } else {
+            } 
+            else 
+            {
                 this.dir = new Vector<N2>(N2.instance);
                 this.dir.set(0,0,0.0);
                 this.dir.set(1,0,0.0);
@@ -93,17 +96,15 @@ public class Path
         }
     }
 
-    public static class PathFeedback {
+    public static class PathFeedback 
+    {
         Vector<N2> velocity;
         Pose2d pose;
-        double orientation_weight = 1.0;
-        double translation_weight = 1.0;
 
-        public PathFeedback(Vector<N2> velocity, Pose2d pose, double ow, double tw) {
+        public PathFeedback(Vector<N2> velocity, Pose2d pose) 
+        {
             this.velocity = velocity;
             this.pose = pose;
-            this.orientation_weight = ow;
-            this.translation_weight = tw;
         }
     }
 
@@ -150,7 +151,8 @@ public class Path
 
         if (length < 0.001)  
         {
-            if (projection != null) {
+            if (projection != null) 
+            {
                 // Degenerate case the projection point is basically at "start".
                 projection.set(0,0, start.get(0,0));
                 projection.set(1,0,start.get(1,0));
@@ -259,11 +261,11 @@ public class Path
         
         // Project the computed position onto the path segment as well to stay on segment and hit endpoints exactly.
         Vector<N2> ppp = new Vector<N2>(N2.instance);  /// projected path position point.
-        double notused = distanceToSegment(seg.start.position, seg.end.position, pp, ppp);
+        //double notused = distanceToSegment(seg.start.position, seg.end.position, pp, ppp);
 
         Pose2d pathPoint = new Pose2d(new Translation2d(ppp.get(0, 0), ppp.get(1, 0)), new Rotation2d(seg.orientation));
 
-        return new PathFeedback(Vp, pathPoint, seg.orientation_weight, seg.translation_weight);
+        return new PathFeedback(Vp, pathPoint);
     }
 
     /**
