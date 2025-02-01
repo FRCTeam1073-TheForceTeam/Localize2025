@@ -75,6 +75,8 @@ public class Lidar extends DiagnosticsSubsystem {
     int offset;
     int rawDataByte;
     int pointsOnLine;
+    int rand1;
+    int rand2;
     Transform2d robotToLidar = new Transform2d(new Translation2d(0.27, 0), new Rotation2d()); // Translation needs x and y, rotation needs 
     Matrix<N3,N3> T;
     Random randy = new Random();
@@ -127,14 +129,19 @@ public class Lidar extends DiagnosticsSubsystem {
     * Compute a cost by checking how many points fit the model
     * Repeat until you found the model with the lowest cost */
     public ArrayList<Scan> lidarRANSAC(){
-        ransac = getLidarArray();
+        ransac = new ArrayList<Scan>(getLidarArray());
+        System.out.println("Size of ransac array " + ransac.size());
         bestInliers.clear();
         for(int i = 0; i < 10; i++){
             // select two random points
 
             inliers.clear();
-            point1 = ransac.get(randy.nextInt(ransac.size()));
-            point2 = ransac.get(randy.nextInt(ransac.size()));
+            rand1 = randy.nextInt(ransac.size());
+            rand2 = randy.nextInt(ransac.size());
+            System.out.print(" Rand1 " + rand1);
+            System.out.println(" Rand2 " + rand2);
+            point1 = ransac.get(rand1);
+            point2 = ransac.get(rand2);
             while(point1 == point2){
                 point2 = ransac.get(randy.nextInt(ransac.size()));
             }
