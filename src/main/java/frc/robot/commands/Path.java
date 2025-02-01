@@ -236,6 +236,9 @@ public class Path
         // Compute projection of current position onto path segment and the offset from the path segment.
         double path_offset = distanceToSegment(seg.start.position, seg.end.position, pos, path_pos);
         SmartDashboard.putNumber("Path/path_offset", path_offset);
+        SmartDashboard.putNumber("Path/Path X", path_pos.get(0));
+        SmartDashboard.putNumber("Path/Path Y", path_pos.get(1));
+
 
         if (path_offset < seg.width) 
         {

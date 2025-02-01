@@ -21,10 +21,10 @@ public class TestAuto
         Point point3 = new Point(11, 2);
 
         ArrayList<Segment> segments = new ArrayList<Segment>();
-        segments.add(new Segment(start, point1, 0, 2));
-        segments.add(new Segment(point1, point2, 0, 2));
-        segments.add(new Segment(point2, point3, 0, 2));
-        segments.add(new Segment(point3, start, 0, 2));
+        segments.add(new Segment(start, point1, -Math.PI / 2, 1));
+        segments.add(new Segment(point1, point2, -Math.PI, 1));
+        segments.add(new Segment(point2, point3, Math.PI / 2, 1));
+        segments.add(new Segment(point3, start, 0, 1));
         // segments.add(new Segment(start, point1, 0, 2));
 
         point2.blend_radius = 1;

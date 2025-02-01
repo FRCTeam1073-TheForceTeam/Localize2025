@@ -119,21 +119,29 @@ public class DrivePath extends Command
     // Compute position and velocity desired from where we actually are:
     PathFeedback pathFeedback = path.getPathFeedback(currentSegmentIndex, robotPose);
 
-    maxVelocity = pathFeedback.velocity.norm();
-    maxAngularVelocity = pathFeedback.velocity.norm();
+    // maxVelocity = pathFeedback.velocity.norm();
+    // maxAngularVelocity = pathFeedback.velocity.norm();
+
+    maxVelocity = path.segments.get(currentSegmentIndex).velocity;
+    maxAngularVelocity = 1;
     
 
     if (currentSegmentIndex >= path.segments.size() - 1)
     {
       // Last point is meant to be a bit different:
-      xVelocity = xController.calculate(robotPose.getX(), pathFeedback.pose.getX()) + 0.3 * pathFeedback.velocity.get(0,0);
-      yVelocity = yController.calculate(robotPose.getY(), pathFeedback.pose.getY()) + 0.3 * pathFeedback.velocity.get(1,0);
+      //xVelocity = xController.calculate(robotPose.getX(), pathFeedback.pose.getX()) + 0.3 * pathFeedback.velocity.get(0,0);
+      //yVelocity = yController.calculate(robotPose.getY(), pathFeedback.pose.getY()) + 0.3 * pathFeedback.velocity.get(1,0);
+
+      xVelocity = pathFeedback.velocity.get(0,0);
+      yVelocity = pathFeedback.velocity.get(1,0);
       thetaVelocity = thetaController.calculate(robotPose.getRotation().getRadians(), path.finalOrientation);
     }
     else
     {
-      xVelocity = xController.calculate(robotPose.getX(), pathFeedback.pose.getX()) + 0.3 * pathFeedback.velocity.get(0,0);
-      yVelocity = yController.calculate(robotPose.getY(), pathFeedback.pose.getY()) + 0.3 * pathFeedback.velocity.get(1,0);
+      //xVelocity = xController.calculate(robotPose.getX(), pathFeedback.pose.getX()) + 0.3 * pathFeedback.velocity.get(0,0);
+      //yVelocity = yController.calculate(robotPose.getY(), pathFeedback.pose.getY()) + 0.3 * pathFeedback.velocity.get(1,0);
+      xVelocity = pathFeedback.velocity.get(0,0);
+      yVelocity = pathFeedback.velocity.get(1,0);
       thetaVelocity = thetaController.calculate(robotPose.getRotation().getRadians(), path.getPathOrientation(currentSegmentIndex, robotPose)); 
     }
     
@@ -173,11 +181,7 @@ public class DrivePath extends Command
   @Override
   public void end(boolean interrupted) 
   {
-    // Set our schema output to full stop.
-    for (int i = 0; i < 999; i++)
-    {
-      System.out.println("AAAAAAAAAAAAAA");
-    }
+    // Set our schema output to full stop
     drivetrain.setTargetChassisSpeeds(new ChassisSpeeds(0, 0, 0));
   }
 
