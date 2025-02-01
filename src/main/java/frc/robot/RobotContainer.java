@@ -50,6 +50,7 @@ public class RobotContainer
   private final SendableChooser<String> m_levelChooser = new SendableChooser<>();
   private static final String testLevel = "Test Level";
   private static final String noLevelAuto = "No Level";
+  private static final String level0 = "Level 0";
   private static final String level1 = "Level 1";
   private static final String level2 = "Level 2";
   private static final String level3 = "Level 3";
@@ -70,7 +71,9 @@ public class RobotContainer
     m_positionChooser.addOption("Center Position", centerPos);
 
     m_levelChooser.setDefaultOption("No Level", noLevelAuto);
+
     m_levelChooser.addOption("Test Auto", testLevel);
+    m_levelChooser.addOption("Level 0", level0);
     m_levelChooser.addOption("Level 1", level1);
     m_levelChooser.addOption("Level 2", level2);
     m_levelChooser.addOption("Level 3", level3);
@@ -102,6 +105,9 @@ public class RobotContainer
       case noLevelAuto:
         level = -1;
         break;
+      case level0:
+        level = 0;
+        break;
       case level1:
         level = 1;
         break;
@@ -128,11 +134,11 @@ public class RobotContainer
       case noPosition:
         return null;
       case leftPos:
-        return AutoLeftStart.create(level, isRed, m_drivetrain);
+        return AutoLeftStart.create(level, isRed, m_drivetrain, m_localizer);
       case rightPos:
         return AutoRightStart.create(level, isRed, m_drivetrain, m_localizer);
       case centerPos:
-        return AutoCenterStart.create(level, isRed, m_drivetrain);
+        return AutoCenterStart.create(level, isRed, m_drivetrain, m_localizer);
       default:
         return null;
     }

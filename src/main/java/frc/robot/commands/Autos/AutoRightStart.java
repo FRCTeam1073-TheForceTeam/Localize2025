@@ -16,8 +16,10 @@ public class AutoRightStart
     {
         switch(level) 
         {
+            case 0:
+                return GenericL0.create(isRed, drivetrain, localizer);
             case 1: 
-                return RightL1.create(isRed, drivetrain);
+                return RightL1.create(isRed, drivetrain, localizer);
             case 2:
                 return RightL2.create(isRed, drivetrain);
             case 3:

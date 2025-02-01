@@ -16,15 +16,17 @@ public class TestAuto
     public static Command create(boolean isRed, Drivetrain drivetrain, Localizer localizer) 
     {
         Point start = new Point(10, 6);
-        Point point1 = new Point(15.1, 7); 
-        Point point2 = new Point(15, 2);
+        Point point1 = new Point(15.5, 7); 
+        Point point2 = new Point(15.5, 2);
         Point point3 = new Point(11, 2);
 
         ArrayList<Segment> segments = new ArrayList<Segment>();
-        segments.add(new Segment(start, point1, -Math.PI / 2, 1));
-        segments.add(new Segment(point1, point2, -Math.PI, 1));
-        segments.add(new Segment(point2, point3, Math.PI / 2, 1));
-        segments.add(new Segment(point3, start, 0, 1));
+        for(int i = 0; i < 10; i++) {
+            segments.add(new Segment(start, point1, -Math.PI / 2, 1.5));
+            segments.add(new Segment(point1, point2, -Math.PI, 1.5));
+            segments.add(new Segment(point2, point3, Math.PI / 2, 1.5));
+            segments.add(new Segment(point3, start, 0, 1.5));
+        }
         // segments.add(new Segment(start, point1, 0, 2));
 
         point2.blend_radius = 1;
