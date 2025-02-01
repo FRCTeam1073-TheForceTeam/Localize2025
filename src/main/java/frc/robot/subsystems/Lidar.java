@@ -14,7 +14,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
+//TODO: if no communication - skip process
 public class Lidar extends DiagnosticsSubsystem {
     SerialPort serialPort = new SerialPort(460800, SerialPort.Port.kUSB1, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
     private final int bytesPerScan = 5;
@@ -173,49 +173,57 @@ public class Lidar extends DiagnosticsSubsystem {
     // index of beginning and end
     // outputs endpoint
     public Scan[] findLineSegment(ArrayList<Scan> arr){
-        points = arr;
-        pointsOnLine = 0;
-        searchingForStart = true;
-        searchingForEnd = false;
-        foundLine = false;
-        SmartDashboard.putBoolean("Found Line", foundLine);
-        for(int i = 0; i < points.size() - 1; i++){
-            if(searchingForStart){
-                if((points.get(i).getY() - points.get(i + 1).getY()) / (points.get(i).getX() - points.get(i + 1).getX()) <= 7){
-                    indexOfBeginnning = i;
-                    searchingForStart = false;
-                    searchingForEnd = true;
-                    pointsOnLine = 1;
-                }
-            }
-            if(searchingForEnd){
-                if((points.get(i).getY() - points.get(i + 1).getY()) / (points.get(i).getX() - points.get(i + 1).getX()) <= 7){
-                    pointsOnLine ++;
-                }
-                else if((points.get(i).getY() - points.get(i + 1).getY()) / (points.get(i).getX() - points.get(i + 1).getX()) > 7){
-                    if(pointsOnLine >= 10){
-                        indexOfEnd = i;
-                        foundLine = true;
-                        break;
-                    }
-                    else{
-                        searchingForStart = true;
-                        searchingForEnd = false;
-                        pointsOnLine = 0;
+            System.out.println("Size of passed in array " + arr.size());
+            // points.clear();
+            // points = arr.copyOf();
+            //System.out.println(points.size());
+        if(arr != null && arr.size() >= 15){
+            System.out.println(arr.size());
+            pointsOnLine = 0;
+            searchingForStart = true;
+            searchingForEnd = false;
+            foundLine = false;
+            SmartDashboard.putBoolean("Found Line", foundLine);
+            for(int i = 0; i < arr.size() - 1; i++){
+                if(searchingForStart){
+                    if(Math.sqrt(Math.pow((arr.get(i).getY() - arr.get(i + 1).getY()), 2) + Math.pow((arr.get(i).getX() - arr.get(i + 1).getX()), 2)) <= 0.5){
+                        indexOfBeginnning = i;
+                        searchingForStart = false;
+                        searchingForEnd = true;
+                        pointsOnLine = 1;
                     }
                 }
+                if(searchingForEnd){
+                    if(Math.sqrt(Math.pow((arr.get(i).getY() - arr.get(i + 1).getY()), 2) + Math.pow((arr.get(i).getX() - arr.get(i + 1).getX()), 2)) <= 0.5){
+                        pointsOnLine ++;
+                    }
+                    else if(Math.sqrt(Math.pow((arr.get(i).getY() - arr.get(i + 1).getY()), 2) + Math.pow((arr.get(i).getX() - arr.get(i + 1).getX()), 2)) > 0.5){
+                        if(pointsOnLine >= 10){
+                            indexOfEnd = i;
+                            foundLine = true;
+                            break;
+                        }
+                        else{
+                            searchingForStart = true;
+                            searchingForEnd = false;
+                            pointsOnLine = 0;
+                        }
+                    }
+                }
             }
-        }
-        if(pointsOnLine >= 10){
-            startAndEnd[0] = points.get(indexOfBeginnning);
-            startAndEnd[1] = points.get(indexOfEnd);
+        if(pointsOnLine >= 10 && indexOfEnd < arr.size()){
+            //TODO: implement point class to return array of start and end point, not index
+            startAndEnd[0] = arr.get(indexOfBeginnning);
+            startAndEnd[1] = arr.get(indexOfEnd);
             SmartDashboard.putNumber("Start Point X", startAndEnd[0].getX());
             SmartDashboard.putNumber("Start Point Y", startAndEnd[0].getY());
             SmartDashboard.putNumber("End Point X", startAndEnd[1].getX());
             SmartDashboard.putNumber("End Point Y", startAndEnd[1].getY());
-            SmartDashboard.putBoolean("Found Line", foundLine);
+            SmartDashboard.putBoolean("Found Line", true);
 
             return startAndEnd;
+        }
+        return null;
         }
         return null;
     }
@@ -261,7 +269,6 @@ public class Lidar extends DiagnosticsSubsystem {
         // round down to determine number of full scans available
         numScansToRead = numBytesAvail/bytesPerScan;
         byte[] rawData = serialPort.read(numScansToRead * bytesPerScan);
-        // TODO: clockwise is positive - opposite for robot
         for(int i = 0; i < numScansToRead; i ++){
             offset = i * bytesPerScan;
             recordScan = true;
@@ -272,7 +279,7 @@ public class Lidar extends DiagnosticsSubsystem {
                     arrayTwoTimestamp = Timer.getFPGATimestamp();
                     numTimesLidarArraySwitch ++;
                     writeToOne = false;
-                    if(arrayTwoFilled){
+                    if(arrayTwoFilled && getLidarArray() != null){
                         findLineSegment(lidarRANSAC());
                     }
                 }
@@ -284,7 +291,9 @@ public class Lidar extends DiagnosticsSubsystem {
                     numTimesLidarArraySwitch ++;
                     arrayTwoFilled = true;
                     writeToOne = true;
-                    findLineSegment(lidarRANSAC());
+                    if(getLidarArray() != null){
+                        findLineSegment(lidarRANSAC());
+                    }
                 }
             } 
             // TODO: print out number of scans we got, map out scans?, put angle filter (only care abt certain angles), range filter
