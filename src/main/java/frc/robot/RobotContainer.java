@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.AlignToTag;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.commands.Autos.AutoCenterStart;
 import frc.robot.commands.Autos.AutoLeftStart;
@@ -35,6 +37,7 @@ public class RobotContainer
   private final MapDisplay m_MapDisplay = new MapDisplay(m_drivetrain, m_localizer, m_fieldMap);
 
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder, m_localizer);
+  private final AlignToTag m_alignToTag = new AlignToTag(m_drivetrain, m_aprilTagFinder, m_localizer, m_fieldMap);
 
   private boolean isRed;
   private int level;
@@ -86,9 +89,9 @@ public class RobotContainer
     configureBindings();
   }
 
-  private void configureBindings() 
-  { 
-    
+  private void configureBindings() { 
+    Trigger alignToTag = new Trigger(m_OI::getDriverAButton);
+    alignToTag.onTrue(m_alignToTag.aprilTagAlign(m_fieldMap.getBestAprilTag(), "None")); //TODO: make it so that it gets the tag from the field map
   }
 
   public void autonomousInit()

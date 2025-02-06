@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.photonvision.targeting.PhotonTrackedTarget;
+
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -34,7 +36,7 @@ public class AlignToTag extends Command {
   /** Creates a new alignToTag. */
   public AlignToTag(Drivetrain drivetrain, AprilTagFinder tagFinder, Localizer localizer, FieldMap fieldMap) {
     // Use addRequirements() here to declare subsystem dependencies.
-    this.drivet rain = drivetrain;
+    this.drivetrain = drivetrain;
     this.tagFinder = tagFinder;
     this.localizer = localizer;
     this.fieldMap = fieldMap;
@@ -54,14 +56,14 @@ public class AlignToTag extends Command {
   @Override
   public void execute() {}
 
-  public Command aprilTagAlign(AprilTag aprilTag, String side) {
+  public Command aprilTagAlign(PhotonTrackedTarget aprilTag, String side) {
     Pose2d currentPose = localizer.getPose();
-    Optional<Pose3d> tagPose = FieldMap.fieldMap.getTagPose(aprilTag.ID);
+    Optional<Pose3d> tagPose = FieldMap.fieldMap.getTagPose(aprilTag.getFiducialId());
     if(!tagPose.isPresent()) {
       // it doesn't have a pose to give us yet, bail
       return null;
     }
-    double theta = (tagThetas.get(aprilTag.ID) != null) ? tagThetas.get(aprilTag.ID) : 0;
+    double theta = (tagThetas.get(aprilTag.getFiducialId()) != null) ? tagThetas.get(aprilTag.getFiducialId()) : 0;
     Pose3d theActualPose = tagPose.get();
     Point start = new Point(currentPose.getX(), currentPose.getY());
     Point destination = new Point(theActualPose.getX() - 0.35 * Math.cos(theta), theActualPose.getY() - 0.35 * Math.sin(theta));
@@ -71,7 +73,6 @@ public class AlignToTag extends Command {
 
     Path path = new Path(segment, theta);
     return new SequentialCommandGroup(new DrivePath(drivetrain, path, localizer));
-
   }
 
   // Called once the command ends or is interrupted.

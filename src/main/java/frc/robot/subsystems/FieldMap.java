@@ -6,6 +6,8 @@ package frc.robot.subsystems;
 import java.util.List;
 import java.util.Optional;
 
+import org.photonvision.targeting.PhotonTrackedTarget;
+
 import edu.wpi.first.apriltag.AprilTag;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
@@ -18,22 +20,30 @@ public class FieldMap
     public static final AprilTagFieldLayout fieldMap = AprilTagFieldLayout.loadField(AprilTagFields.k2025Reefscape);
 
     private Localizer localizer;
-    private Pose2d robot2DPose = localizer.getPose();
+    private AprilTagFinder tagFinder;
+    private Pose2d robot2DPose;
     //private ArrayList<Double> distances = new ArrayList<Double>();
    
     private List<AprilTag> aprilTags = fieldMap.getTags();
-    private AprilTag aprilTag;
+    private PhotonTrackedTarget aprilTag;
     
     // public FieldMap()
     // {
 
     // }
 
-    public AprilTag getBestAprilTag(Pose2d robot2DPose, List<AprilTag> aprilTags){
+    public PhotonTrackedTarget getBestAprilTag(){
         double shortestDistance = 100;
+        robot2DPose = localizer.getPose();
 
-        for(AprilTag tag : aprilTags) {
-            if (findDistance(robot2DPose, tag.ID) < shortestDistance)
+        tagFinder.readTagData();
+        List<PhotonTrackedTarget> aprilTags = tagFinder.getFRCurrentTagData();
+        for(PhotonTrackedTarget FLTag : tagFinder.getFLCurrentTagData()) {
+            aprilTags.add(FLTag);
+        }
+
+        for(PhotonTrackedTarget tag : aprilTags) {
+            if (findDistance(robot2DPose, tag.getFiducialId()) < shortestDistance)
                 aprilTag = tag;
         }
 
