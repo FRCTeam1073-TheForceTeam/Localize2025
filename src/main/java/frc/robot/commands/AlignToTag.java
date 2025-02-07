@@ -30,7 +30,7 @@ public class AlignToTag extends Command {
   Localizer localizer;
   FieldMap fieldMap;
 
-  Map<Integer, Double> tagThetas = new HashMap<>();
+  //Map<Integer, Double> tagThetas = new HashMap<>();
 
 
   /** Creates a new alignToTag. */
@@ -40,12 +40,12 @@ public class AlignToTag extends Command {
     this.tagFinder = tagFinder;
     this.localizer = localizer;
     this.fieldMap = fieldMap;
-    tagThetas.put(11, Math.PI / 4);
-    tagThetas.put(10, 0.0);
-    tagThetas.put(9, - Math.PI / 4);
-    tagThetas.put(8, - 3 * Math.PI / 4);
-    tagThetas.put(7, Math.PI);
-    tagThetas.put(6, Math.PI / 4);
+    // tagThetas.put(11, Math.PI / 4); // probably not relevant
+    // tagThetas.put(10, 0.0);
+    // tagThetas.put(9, - Math.PI / 4);
+    // tagThetas.put(8, - 3 * Math.PI / 4);
+    // tagThetas.put(7, Math.PI);
+    // tagThetas.put(6, Math.PI / 4);
   }
 
   // Called when the command is initially scheduled.
@@ -63,8 +63,9 @@ public class AlignToTag extends Command {
       // it doesn't have a pose to give us yet, bail
       return null;
     }
-    double theta = (tagThetas.get(aprilTag.getFiducialId()) != null) ? tagThetas.get(aprilTag.getFiducialId()) : 0;
     Pose3d theActualPose = tagPose.get();
+    //double theta = (tagThetas.get(aprilTag.getFiducialId()) != null) ? tagThetas.get(aprilTag.getFiducialId()) : 0;
+    double theta = (theActualPose.getRotation() != null) ? theActualPose.getRotation().getZ() : 0; // TODO: check if Z is the right rotation to get
     Point start = new Point(currentPose.getX(), currentPose.getY());
     Point destination = new Point(theActualPose.getX() - 0.35 * Math.cos(theta), theActualPose.getY() - 0.35 * Math.sin(theta));
 
