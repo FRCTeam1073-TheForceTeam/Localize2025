@@ -46,6 +46,9 @@ public class Localizer extends SubsystemBase
     private double timeGap = 0.5;
     private double linearSpeedThreshold = 2.5; // TODO: get actual numbers here
     private double angularSpeedThreshold = 1.5; // TODO: get actual numbers here
+    private Pose2d robot2DPose;   
+    private List<AprilTag> aprilTags = FieldMap.fieldMap.getTags();
+    private PhotonTrackedTarget aprilTag;
 
     //added a set transform from sensor to center of the robot to the sensor and can have multiple as needed
     private final Transform3d sensorTransform = new Transform3d();
@@ -140,35 +143,21 @@ public class Localizer extends SubsystemBase
         angularSpeedThreshold = angularSpeed;
     }
 
-    private Localizer localizer;
-    private AprilTagFinder tagFinder;
-    private Pose2d robot2DPose;
-
-    //private ArrayList<Double> distances = new ArrayList<Double>();
-   
-    private List<AprilTag> aprilTags = FieldMap.fieldMap.getTags();
-    private PhotonTrackedTarget aprilTag;
-    
-    // public FieldMap()
-    // {
-
-    // }
-
     public PhotonTrackedTarget getBestAprilTag() {
         double shortestDistance = 100;
-        robot2DPose = localizer.getPose();
+        robot2DPose = getPose();
 
-        tagFinder.readTagData();
-        List<PhotonTrackedTarget> aprilTags = tagFinder.getFRCurrentTagData();
-        for(PhotonTrackedTarget FLTag : tagFinder.getFLCurrentTagData()) {
+        finder.readTagData();
+        List<PhotonTrackedTarget> aprilTags = finder.getFRCurrentTagData();
+        for(PhotonTrackedTarget FLTag : finder.getFLCurrentTagData()) {
             aprilTags.add(FLTag);
         }
 
         for(PhotonTrackedTarget tag : aprilTags) {
-            if (findDistance(robot2DPose, tag.getFiducialId()) < shortestDistance)
+            if (findDistance(robot2DPose, tag.getFiducialId()) < shortestDistance) {
                 aprilTag = tag;
+            }
         }
-
         return aprilTag;
     }
 
@@ -176,19 +165,16 @@ public class Localizer extends SubsystemBase
 
         Optional<Pose3d> tag3dPose = FieldMap.fieldMap.getTagPose(tagID);
 
-        if (!tag3dPose.isPresent())
-        {
+        if(!tag3dPose.isPresent()) {
             //we don't have a value to work with, bail
             return -1.0;
         }
 
         double tagX = tag3dPose.get().getX();
         double tagY = tag3dPose.get().getY();
-
         double distance = Math.sqrt(Math.pow((tagX - robot2DPose.getX()), 2) + Math.pow((tagY - robot2DPose.getY()), 2));
         return distance;
     }
-
     
     @Override
     public void periodic()

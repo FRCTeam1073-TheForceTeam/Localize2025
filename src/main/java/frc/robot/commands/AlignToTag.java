@@ -56,18 +56,18 @@ public class AlignToTag extends Command {
   @Override
   public void execute() {}
 
-  public Command aprilTagAlign(PhotonTrackedTarget aprilTag, String side) {
+  public Command aprilTagAlign(PhotonTrackedTarget aprilTag, String coralSide) {
     Pose2d currentPose = localizer.getPose();
     Optional<Pose3d> tagPose = FieldMap.fieldMap.getTagPose(aprilTag.getFiducialId());
     if(!tagPose.isPresent()) {
       // it doesn't have a pose to give us yet, bail
-      return null;
+      return null; //TODO: handle null vales
     }
-    Pose3d theActualPose = tagPose.get();
+    Pose3d phyTagPos = tagPose.get();
     //double theta = (tagThetas.get(aprilTag.getFiducialId()) != null) ? tagThetas.get(aprilTag.getFiducialId()) : 0;
-    double theta = (theActualPose.getRotation() != null) ? theActualPose.getRotation().getZ() : 0; // TODO: check if Z is the right rotation to get
+    double theta = (phyTagPos.getRotation() != null) ? phyTagPos.getRotation().getZ() : 0; // TODO: check if Z is the right rotation to get
     Point start = new Point(currentPose.getX(), currentPose.getY());
-    Point destination = new Point(theActualPose.getX() - 0.35 * Math.cos(theta), theActualPose.getY() - 0.35 * Math.sin(theta));
+    Point destination = new Point(phyTagPos.getX() - 0.35 * Math.cos(theta), phyTagPos.getY() - 0.35 * Math.sin(theta));
 
     ArrayList<Segment> segment = new ArrayList<Segment>();
     segment.add(new Segment(start, destination, theta, 0.5));
