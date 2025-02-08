@@ -56,13 +56,16 @@ public class AlignToTag extends Command {
   @Override
   public void execute() {}
 
-  public Command aprilTagAlign(PhotonTrackedTarget aprilTag, String coralSide) {
+  public Command aprilTagAlign(PhotonTrackedTarget aprilTag, String coralSide) 
+  {
     Pose2d currentPose = localizer.getPose();
     Optional<Pose3d> tagPose = FieldMap.fieldMap.getTagPose(aprilTag.getFiducialId());
-    if(!tagPose.isPresent()) {
+    if(!tagPose.isPresent()) 
+    {
       // it doesn't have a pose to give us yet, bail
       return null; //TODO: handle null vales
     }
+    
     Pose3d phyTagPos = tagPose.get();
     //double theta = (tagThetas.get(aprilTag.getFiducialId()) != null) ? tagThetas.get(aprilTag.getFiducialId()) : 0;
     double theta = (phyTagPos.getRotation() != null) ? phyTagPos.getRotation().getZ() : 0; // TODO: check if Z is the right rotation to get

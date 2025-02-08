@@ -89,9 +89,14 @@ public class RobotContainer
     configureBindings();
   }
 
-  private void configureBindings() { 
+  private void configureBindings() 
+  { 
     Trigger alignToTag = new Trigger(m_OI::getDriverAButton);
-    alignToTag.onTrue(m_alignToTag.aprilTagAlign(m_localizer.getBestAprilTag(), "None")); //TODO: make it so that it gets the tag from the field map
+    if (m_localizer.getBestAprilTag() != null)
+    {
+      alignToTag.onTrue(m_alignToTag.aprilTagAlign(m_localizer.getBestAprilTag(), "None")); //TODO: make it so that it gets the tag from the field map
+    }
+    
   }
 
   public void autonomousInit()

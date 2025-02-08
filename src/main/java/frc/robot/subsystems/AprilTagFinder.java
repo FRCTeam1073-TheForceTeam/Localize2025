@@ -8,13 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.photonvision.PhotonCamera;
-import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
-import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonUtils;
 
-import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
