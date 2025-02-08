@@ -142,39 +142,6 @@ public class Localizer extends SubsystemBase
     {
         angularSpeedThreshold = angularSpeed;
     }
-
-    public PhotonTrackedTarget getBestAprilTag() {
-        double shortestDistance = 100;
-        robot2DPose = getPose();
-
-        finder.readTagData();
-        List<PhotonTrackedTarget> aprilTags = finder.getFRCurrentTagData();
-        for(PhotonTrackedTarget FLTag : finder.getFLCurrentTagData()) {
-            aprilTags.add(FLTag);
-        }
-
-        for(PhotonTrackedTarget tag : aprilTags) {
-            if (findDistance(robot2DPose, tag.getFiducialId()) < shortestDistance) {
-                aprilTag = tag;
-            }
-        }
-        return aprilTag;
-    }
-
-    public double findDistance(Pose2d robot2DPose, int tagID) {
-
-        Optional<Pose3d> tag3dPose = FieldMap.fieldMap.getTagPose(tagID);
-
-        if(!tag3dPose.isPresent()) {
-            //we don't have a value to work with, bail
-            return -1.0;
-        }
-
-        double tagX = tag3dPose.get().getX();
-        double tagY = tag3dPose.get().getY();
-        double distance = Math.sqrt(Math.pow((tagX - robot2DPose.getX()), 2) + Math.pow((tagY - robot2DPose.getY()), 2));
-        return distance;
-    }
     
     @Override
     public void periodic()

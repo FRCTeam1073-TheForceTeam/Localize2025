@@ -7,6 +7,9 @@ package frc.robot.commands;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+
+import org.photonvision.targeting.PhotonTrackedTarget;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -103,34 +106,41 @@ public class TeleopDrive extends Command
     {
       drivetrain.parkingBrake(false);
     }
-    else 
-    { 
-      //multiples the angle by a number from 1 to the square root of 30:
-        mult1 = 1.0 + (m_OI.getDriverLeftTrigger() * ((Math.sqrt(25)) - 1));
-        mult2 = 1.0 + (m_OI.getDriverRightTrigger() * ((Math.sqrt(25)) - 1));
 
-        
+    if (!parked)
+    {
+      // if (m_OI.getDriverAButton())
+      // {
+      //   alignToTag.aprilTagAlign(bestTag, 0.5, "None", maximumLinearVelocity, maximumRotationVelocity);
+      // }
+      // else 
+      { 
+        //multiples the angle by a number from 1 to the square root of 30:
+          mult1 = 1.0 + (m_OI.getDriverLeftTrigger() * ((Math.sqrt(25)) - 1));
+          mult2 = 1.0 + (m_OI.getDriverRightTrigger() * ((Math.sqrt(25)) - 1));
 
-        //sets deadzones on the controller to extend to .05:
-        if(Math.abs(leftY) < .15) {leftY = 0;}
-        if(Math.abs(leftX) < .15) {leftX = 0;}
-        if(Math.abs(rightX) < .15) {rightX = 0;}
+          //sets deadzones on the controller to extend to .05:
+          if(Math.abs(leftY) < .15) {leftY = 0;}
+          if(Math.abs(leftX) < .15) {leftX = 0;}
+          if(Math.abs(rightX) < .15) {rightX = 0;}
 
-        vx = MathUtil.clamp((-leftY * maximumLinearVelocity / 25 ) * mult1 * mult2, -maximumLinearVelocity, maximumLinearVelocity);
-        vy = MathUtil.clamp((-leftX * maximumLinearVelocity / 25 ) * mult1 * mult2, -maximumLinearVelocity, maximumLinearVelocity);
-        w = MathUtil.clamp(-(rightX * maximumRotationVelocity / 25) * mult1 * mult2, -maximumRotationVelocity, maximumRotationVelocity);
+          vx = MathUtil.clamp((-leftY * maximumLinearVelocity / 25 ) * mult1 * mult2, -maximumLinearVelocity, maximumLinearVelocity);
+          vy = MathUtil.clamp((-leftX * maximumLinearVelocity / 25 ) * mult1 * mult2, -maximumLinearVelocity, maximumLinearVelocity);
+          w = MathUtil.clamp(-(rightX * maximumRotationVelocity / 25) * mult1 * mult2, -maximumRotationVelocity, maximumRotationVelocity);
 
-        SmartDashboard.putNumber("TeleopDrive/vx", vx);
+          SmartDashboard.putNumber("TeleopDrive/vx", vx);
 
-        drivetrain.setTargetChassisSpeeds(
-                ChassisSpeeds.fromFieldRelativeSpeeds(
-                    vx, 
-                    vy,
-                    w, 
-                    Rotation2d.fromDegrees(localizer.getPose().getRotation().getDegrees()) // gets fused heading
-                )
-            );
+          drivetrain.setTargetChassisSpeeds(
+            ChassisSpeeds.fromFieldRelativeSpeeds(
+              vx, 
+              vy,
+              w, 
+              Rotation2d.fromDegrees(localizer.getPose().getRotation().getDegrees()) // gets fused heading
+            )
+          );
+      }
     }
+    
     
     // Allow driver to zero the drive subsystem heading for field-centric control.
     if(m_OI.getDriverMenuButton())
@@ -138,11 +148,7 @@ public class TeleopDrive extends Command
       drivetrain.zeroHeading();
     }
 
-    if(m_OI.getDriverAButton()){
-      Rotation2d zeroRotate = new Rotation2d();
-      Pose2d zero = new Pose2d(0.0, 0.0, zeroRotate);
-      drivetrain.resetOdometry(zero);
-    }
+    
 
 
     SmartDashboard.putBoolean("Field Centric ", fieldCentric);

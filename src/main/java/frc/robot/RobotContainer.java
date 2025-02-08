@@ -35,9 +35,8 @@ public class RobotContainer
   private final FieldMap m_fieldMap = new FieldMap();
   private final Localizer m_localizer = new Localizer(m_drivetrain, m_fieldMap, m_aprilTagFinder);
   private final MapDisplay m_MapDisplay = new MapDisplay(m_drivetrain, m_localizer, m_fieldMap);
-
+  private final AlignToTag m_alignToTag = new AlignToTag(m_drivetrain, m_localizer, m_fieldMap);
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder, m_localizer);
-  private final AlignToTag m_alignToTag = new AlignToTag(m_drivetrain, m_aprilTagFinder, m_localizer, m_fieldMap);
 
   private boolean isRed;
   private int level;
@@ -92,11 +91,7 @@ public class RobotContainer
   private void configureBindings() 
   { 
     Trigger alignToTag = new Trigger(m_OI::getDriverAButton);
-    if (m_localizer.getBestAprilTag() != null)
-    {
-      alignToTag.onTrue(m_alignToTag.aprilTagAlign(m_localizer.getBestAprilTag(), "None")); //TODO: make it so that it gets the tag from the field map
-    }
-    
+    alignToTag.whileTrue(m_alignToTag); //TODO: make it so that it gets the tag from the field map
   }
 
   public void autonomousInit()
