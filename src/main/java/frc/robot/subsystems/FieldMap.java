@@ -43,22 +43,22 @@ public class FieldMap
     public Pose2d getBestTagPose(int tagID, int slot, double offset)
     {
         Pose2d tagPose = fieldMap.getTagPose(tagID).get().toPose2d();
-        double rotation = tagPose.getRotation().getRadians();
-        double xCoord = 0;
+        double rotation = Math.PI;
+        double xCoord = 0.5;
         double yCoord = 0;
 
         //TODO: check/test the math
-        if(slot == 1) {
-            xCoord = -1 * offset * Math.cos(rotation);
-            yCoord = -1 * offset * Math.sin(rotation);
+        if(slot == 1) //center
+        {
+            yCoord = 0;
         }
-        else if(slot == 0) {
-            xCoord = -1.24 * offset * Math.cos(rotation);
-            yCoord = -1.24 * offset * Math.sin(rotation);
+        else if(slot == 0) //left
+        {
+            yCoord = -offset;
         }
-        else if(slot == 2) {
-            xCoord = -1.24 * offset * Math.cos(rotation);
-            yCoord = -1.24 * offset * Math.sin(rotation);
+        else if(slot == 2) //right
+        {
+            yCoord = offset;
         }
 
         Transform2d robotToReef = new Transform2d(xCoord, yCoord, new Rotation2d(rotation));
@@ -68,41 +68,6 @@ public class FieldMap
         SmartDashboard.putNumber("FieldMap/Transform Y", yCoord);
         SmartDashboard.putNumber("FieldMao/TargetTagRotation", rotation);
 
-        // // switch (tagID) 
-        // // {
-        //     case 6:
-        //         if (slot == 0) robotToReef = new Transform2d();
-        //         if (slot == 1) robotToReef = new Transform2d();
-        //         if (slot == 2) robotToReef = new Transform2d();
-        //         break;
-        //     case 7:
-        //         if (slot == 0) robotToReef = new Transform2d();
-        //         if (slot == 1) robotToReef = new Transform2d();
-        //         if (slot == 2) robotToReef = new Transform2d();
-        //         break;
-        //     case 8:
-        //         if (slot == 0) robotToReef = new Transform2d();
-        //         if (slot == 1) robotToReef = new Transform2d();
-        //         if (slot == 2) robotToReef = new Transform2d();
-        //         break;
-        //     case 9:
-        //         if (slot == 0) robotToReef = new Transform2d();
-        //         if (slot == 1) robotToReef = new Transform2d(0.25, 0.43, new Rotation2d(5 * Math.PI / 3));
-        //         if (slot == 2) robotToReef = new Transform2d();
-        //         break;
-        //     case 10:
-        //         if (slot == 0) robotToReef = new Transform2d();
-        //         if (slot == 1) robotToReef = new Transform2d(0.5, 0, new Rotation2d());
-        //         if (slot == 2) robotToReef = new Transform2d();
-        //         break;
-        //     case 11:
-        //         if (slot == 0) robotToReef = new Transform2d();
-        //         if (slot == 1) robotToReef = new Transform2d(0.25, 0.43, new Rotation2d(Math.PI / 3));
-        //         if (slot == 2) robotToReef = new Transform2d();
-        //         break;
-        //     default:
-        //         return null;
-        // }
         return tagPose.plus(robotToReef);
     }
 

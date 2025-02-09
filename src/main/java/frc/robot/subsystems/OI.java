@@ -161,20 +161,29 @@ public class OI extends DiagnosticsSubsystem
     return yDriverButtonDebouncer.calculate(driverController.getRawButton(4));
   }
 
-  public boolean getDriverDPadUp(){
+  public boolean getDriverDPadUp()
+  {
     return (driverController.getPOV() == 0);
   }
 
-  public boolean getDriverDPadDown(){
+  public boolean getDriverDPadDown()
+  {
     return (driverController.getPOV() == 180);
   }
 
-  public boolean getDriverDPadLeft(){
+  public boolean getDriverDPadLeft()
+  {
     return (driverController.getPOV() == 270);
   }
 
-  public boolean getDriverDPadRight(){
+  public boolean getDriverDPadRight()
+  {
     return (driverController.getPOV() == 90);
+  }
+
+  public boolean getDriverAlignToTag()
+  {
+    return getDriverDPadLeft() || getDriverDPadUp() || getDriverDPadRight();
   }
 
   public void zeroOperatorController() {

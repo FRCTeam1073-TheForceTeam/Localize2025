@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.lang.model.util.ElementScanner14;
+
 import org.photonvision.targeting.PhotonTrackedTarget;
 
 import edu.wpi.first.math.MathUtil;
@@ -19,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.AprilTagFinder;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Localizer;
+import frc.robot.subsystems.OI;
 import frc.robot.subsystems.FieldMap;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
@@ -27,6 +30,7 @@ public class AlignToTag extends Command
   Drivetrain drivetrain;
   Localizer localizer;
   FieldMap fieldMap;
+  OI oi;
   int aprilTagID;
   Pose2d targetPose;
   PIDController xController;
@@ -35,20 +39,25 @@ public class AlignToTag extends Command
   double xVelocity;
   double yVelocity;
   double wVelocity;
+  int slot;
 
-  private final static double maximumLinearVelocity = 3.5;   // Meters/second
-  private final static double maximumRotationVelocity = 4.0; // Radians/second
+  // private final static double maximumLinearVelocity = 3.5;   // Meters/second
+  // private final static double maximumRotationVelocity = 4.0; // Radians/second
+  private final static double maximumLinearVelocity = 1.5;   // Meters/second
+  private final static double maximumRotationVelocity = 2.0; // Radians/second
+
 
   Map<Integer, Double> tagThetas = new HashMap<>();
 
 
   /** Creates a new alignToTag. */
-  public AlignToTag(Drivetrain drivetrain, Localizer localizer, FieldMap fieldMap) 
+  public AlignToTag(Drivetrain drivetrain, Localizer localizer, FieldMap fieldMap, OI oi) 
   {
     // Use addRequirements() here to declare subsystem dependencies.
     this.drivetrain = drivetrain;
     this.localizer = localizer;
     this.fieldMap = fieldMap;
+    this.oi = oi;
     xVelocity = 0;
     yVelocity = 0;
     wVelocity = 0;
@@ -58,6 +67,7 @@ public class AlignToTag extends Command
     tagThetas.put(8, 4 * Math.PI / 3);
     tagThetas.put(7, Math.PI);
     tagThetas.put(6, 2 * Math.PI / 3);
+    slot = -1;
 
     xController = new PIDController(
       1.1, 
@@ -95,21 +105,34 @@ public class AlignToTag extends Command
   @Override
   public void execute() 
   {
-
-  }
-
-  public Command alignToTag(int slot) {
     Pose2d currentPose = localizer.getPose();
+
+    if (oi.getDriverDPadLeft())
+    {
+      slot = 0;
+    }
+    else if (oi.getDriverDPadUp())
+    {
+      slot = 1;
+    }
+    else if (oi.getDriverDPadRight())
+    {
+      slot = 2;
+    }
+    else
+    {
+      slot = -1;
+    }
 
     if (aprilTagID == -1)
     {
       aprilTagID = fieldMap.getBestAprilTagID(currentPose);
-      targetPose = fieldMap.getBestTagPose(aprilTagID, slot, 0.5);
+      targetPose = fieldMap.getBestTagPose(aprilTagID, slot, 0.25);
     }
 
     if (targetPose == null)
     {
-      return null;
+      return;
     }
 
     xVelocity = xController.calculate(currentPose.getX(), targetPose.getX());
@@ -123,7 +146,6 @@ public class AlignToTag extends Command
     drivetrain.setTargetChassisSpeeds(
       ChassisSpeeds.fromFieldRelativeSpeeds(xVelocity, yVelocity, wVelocity, localizer.getPose().getRotation())
     );
-    return null; //TODO: re-write (this is definatly not the right way to do it)
   }
 
   // Called once the command ends or is interrupted.

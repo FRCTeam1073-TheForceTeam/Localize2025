@@ -35,7 +35,7 @@ public class RobotContainer
   private final FieldMap m_fieldMap = new FieldMap();
   private final Localizer m_localizer = new Localizer(m_drivetrain, m_fieldMap, m_aprilTagFinder);
   private final MapDisplay m_MapDisplay = new MapDisplay(m_drivetrain, m_localizer, m_fieldMap);
-  private final AlignToTag m_alignToTag = new AlignToTag(m_drivetrain, m_localizer, m_fieldMap);
+  private final AlignToTag m_alignToTag = new AlignToTag(m_drivetrain, m_localizer, m_fieldMap, m_OI);
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder, m_localizer);
 
   private boolean isRed;
@@ -90,14 +90,17 @@ public class RobotContainer
 
   private void configureBindings() 
   { 
-    Trigger alignToTagCenter = new Trigger(m_OI::getDriverDPadUp);
-    alignToTagCenter.whileTrue(m_alignToTag.alignToTag(1));
+    // Trigger alignToTagCenter = new Trigger(m_OI::getDriverDPadUp);
+    // alignToTagCenter.whileTrue(m_alignToTag.alignToTag(1));
 
-    Trigger alignToTagLeft = new Trigger(m_OI::getDriverDPadLeft);
-    alignToTagLeft.whileTrue(m_alignToTag.alignToTag(0));
+    // Trigger alignToTagLeft = new Trigger(m_OI::getDriverDPadLeft);
+    // alignToTagLeft.whileTrue(m_alignToTag.alignToTag(0));
 
-    Trigger alignToTagRight = new Trigger(m_OI::getDriverDPadRight);
-    alignToTagRight.whileTrue(m_alignToTag.alignToTag(2));
+    // Trigger alignToTagRight = new Trigger(m_OI::getDriverDPadRight);
+    // alignToTagRight.whileTrue(m_alignToTag.alignToTag(2));
+
+    Trigger alignToTag = new Trigger(m_OI::getDriverAlignToTag);
+    alignToTag.whileTrue(m_alignToTag);
   }
 
   public void autonomousInit()
@@ -185,6 +188,8 @@ public class RobotContainer
       String selectedPosition = m_positionChooser.getSelected();
       double startLineOffset = 12.227 -8.774 - 2.24; //id 10 x value - center x value - offset from reef to startline
       Pose2d startPos = new Pose2d();
+      centerY = 4.026;
+      centerX = 8.774;
       SmartDashboard.putString("Alliance", "None");
   
       if(DriverStation.getAlliance().isPresent() && !selectedPosition.equals(noPosition))
