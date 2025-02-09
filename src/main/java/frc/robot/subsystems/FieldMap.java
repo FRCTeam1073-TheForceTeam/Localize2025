@@ -31,7 +31,7 @@ public class FieldMap
 
         for(AprilTag tag : aprilTags) 
         {
-            if (findDistance(robotPose, tag.ID) < shortestDistance) 
+            if (findDistance(robotPose, tag.ID) < shortestDistance && tag.ID != 4 && tag.ID != 5 && tag.ID != 14 && tag.ID != 15) 
             {
                 shortestDistance = findDistance(robotPose, bestID);
                 bestID = tag.ID;
