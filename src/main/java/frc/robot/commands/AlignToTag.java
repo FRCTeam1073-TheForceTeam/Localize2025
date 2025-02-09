@@ -46,10 +46,6 @@ public class AlignToTag extends Command
   private final static double maximumLinearVelocity = 1.5;   // Meters/second
   private final static double maximumRotationVelocity = 2.0; // Radians/second
 
-
-  Map<Integer, Double> tagThetas = new HashMap<>();
-
-
   /** Creates a new alignToTag. */
   public AlignToTag(Drivetrain drivetrain, Localizer localizer, FieldMap fieldMap, OI oi) 
   {
@@ -61,12 +57,6 @@ public class AlignToTag extends Command
     xVelocity = 0;
     yVelocity = 0;
     wVelocity = 0;
-    tagThetas.put(11, Math.PI / 3);
-    tagThetas.put(10, 0.0);
-    tagThetas.put(9, 5 * Math.PI / 3);
-    tagThetas.put(8, 4 * Math.PI / 3);
-    tagThetas.put(7, Math.PI);
-    tagThetas.put(6, 2 * Math.PI / 3);
     slot = -1;
 
     xController = new PIDController(
@@ -98,7 +88,6 @@ public class AlignToTag extends Command
     yController.reset();
     thetaController.reset();
     aprilTagID = -1;
-    // targetPose = null;
   }
 
   // Called every time the scheduler runs while the command is scheduled.

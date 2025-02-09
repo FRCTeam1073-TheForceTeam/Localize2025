@@ -47,7 +47,6 @@ public class FieldMap
         double xCoord = 0.5;
         double yCoord = 0;
 
-        //TODO: check/test the math
         if(slot == 1) //center
         {
             yCoord = 0;
