@@ -90,8 +90,14 @@ public class RobotContainer
 
   private void configureBindings() 
   { 
-    Trigger alignToTag = new Trigger(m_OI::getDriverAButton);
-    alignToTag.whileTrue(m_alignToTag); //TODO: make it so that it gets the tag from the field map
+    Trigger alignToTagCenter = new Trigger(m_OI::getDriverDPadUp);
+    alignToTagCenter.whileTrue(m_alignToTag.alignToTag(1));
+
+    Trigger alignToTagLeft = new Trigger(m_OI::getDriverDPadLeft);
+    alignToTagLeft.whileTrue(m_alignToTag.alignToTag(0));
+
+    Trigger alignToTagRight = new Trigger(m_OI::getDriverDPadRight);
+    alignToTagRight.whileTrue(m_alignToTag.alignToTag(2));
   }
 
   public void autonomousInit()

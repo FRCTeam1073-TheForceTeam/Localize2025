@@ -95,17 +95,21 @@ public class AlignToTag extends Command
   @Override
   public void execute() 
   {
+
+  }
+
+  public Command alignToTag(int slot) {
     Pose2d currentPose = localizer.getPose();
 
     if (aprilTagID == -1)
     {
       aprilTagID = fieldMap.getBestAprilTagID(currentPose);
-      targetPose = fieldMap.getBestTagPose(aprilTagID, 1, 0.5);
+      targetPose = fieldMap.getBestTagPose(aprilTagID, slot, 0.5);
     }
 
     if (targetPose == null)
     {
-      return;
+      return null;
     }
 
     xVelocity = xController.calculate(currentPose.getX(), targetPose.getX());
@@ -119,10 +123,8 @@ public class AlignToTag extends Command
     drivetrain.setTargetChassisSpeeds(
       ChassisSpeeds.fromFieldRelativeSpeeds(xVelocity, yVelocity, wVelocity, localizer.getPose().getRotation())
     );
+    return null; //TODO: re-write (this is definatly not the right way to do it)
   }
-
-  // public void aprilTagAlign(PhotonTrackedTarget aprilTag, Pose2d offset, String coralSide/* , double maximumLinearVelocity, double maximumRotationVelocity*/) 
-  // {
 
   // Called once the command ends or is interrupted.
   @Override
