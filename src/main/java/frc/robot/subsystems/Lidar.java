@@ -199,6 +199,15 @@ public class Lidar extends DiagnosticsSubsystem {
             a = point2.getY() - point1.getY();
             b = point1.getX() - point2.getX();
             c = point1.getY() * point2.getX() - point2.getY() * point1.getX();
+            if(Math.abs(a) < 0.05){
+                a = 0.0;
+            }
+            if(Math.abs(b) < 0.05){
+                b = 0.0;
+            }
+            if(Math.abs(c) < 0.05){
+                c = 0.0;
+            }
             for(Scan scan : ransac){
                 distance = Math.abs(a * scan.getX() + b * scan.getY() + c) / Math.sqrt(a * a + b * b);
                 if(distance < distanceThreshold){
@@ -236,10 +245,12 @@ public class Lidar extends DiagnosticsSubsystem {
     }
 
     public double getSlope(){
-        if(getLine() != null){
-            return -bestLine[0]/bestLine[1];
+        if(getLine() != null && b != 0 && a != 0){
+            return -a/b;
         }
-        return 0.0;
+        else{
+            return 0.0;
+        }
     }
 
     public Point[] findLineSegment(ArrayList<Scan> arr){
