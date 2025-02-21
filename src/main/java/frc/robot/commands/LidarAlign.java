@@ -44,7 +44,7 @@ public class LidarAlign extends Command {
       /*1. calculate slope of line detected by lidar */
       lidarSlope = lidar.getSlope();   
       /* 2. Find arctan of the difference between their slopes - angle the robot needs to move */
-      angleToRotate = Math.atan(lidarSlope);
+      angleToRotate = -Math.atan((1 / lidarSlope));
       /* 3. rotate the robot that to that set angle*/
       // TODO: fix thetaController/check if it's null??
       thetaVelocity = MathUtil.clamp(thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate), -2.0, 2.0);

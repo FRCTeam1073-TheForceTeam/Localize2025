@@ -81,7 +81,7 @@ public class Lidar extends DiagnosticsSubsystem {
     double angleToRotate;
     double thetaVelocity;
     double[] bestLine = new double[3]; // a, b, and c value of the best line
-    final double distanceThreshold = 0.05; // maximum distance a point can be from the line to be considered an inlier
+    final double distanceThreshold = 0.005; // maximum distance a point can be from the line to be considered an inlier
     double distance;
     float angle_deg;
     float angle_rad;
@@ -94,7 +94,7 @@ public class Lidar extends DiagnosticsSubsystem {
     final int maxAcceptedAngle1 = 80; // In degrees, for the first range of accepted angles
     final int minAcceptedAngle2 = 280; // In degrees, for the second range of accepted angles
     final int maxAcceptedAngle2 = 360; // In degrees, for the second range of accepted angles
-    private final int minAcceptedQuality = 5;
+    private final int minAcceptedQuality = 7;
     final int minInliers = 10; // minimum number of inliers for a model to be considered valid
     final int maxIterations = 20; // maximum number of iterations to find a model
     int indexOfEnd;
@@ -183,7 +183,7 @@ public class Lidar extends DiagnosticsSubsystem {
         if(ransac.size() <= 0){
             return null;
         }
-        for(int i = 0; i < 10; i++){
+        for(int i = 0; i < 25; i++){
             // select two random points
 
             inliers.clear();
@@ -199,13 +199,13 @@ public class Lidar extends DiagnosticsSubsystem {
             a = point2.getY() - point1.getY();
             b = point1.getX() - point2.getX();
             c = point1.getY() * point2.getX() - point2.getY() * point1.getX();
-            if(Math.abs(a) < 0.05){
+            if(Math.abs(a) < 0.075){
                 a = 0.0;
             }
-            if(Math.abs(b) < 0.05){
+            if(Math.abs(b) < 0.075){
                 b = 0.0;
             }
-            if(Math.abs(c) < 0.05){
+            if(Math.abs(c) < 0.075){
                 c = 0.0;
             }
             for(Scan scan : ransac){
@@ -217,7 +217,7 @@ public class Lidar extends DiagnosticsSubsystem {
                 }
             }
             // if it's greater than the threshold and better
-            if(inliers.size() > bestInliers.size() && inliers.size() > 15){
+            if(inliers.size() > bestInliers.size() && inliers.size() > 45){
                 bestInliers = inliers;
                 bestLine = new double[] {a, b, c};
             }
@@ -310,7 +310,7 @@ public class Lidar extends DiagnosticsSubsystem {
                 SmartDashboard.putNumber("End Point Y", startAndEnd[1].getY());
                 SmartDashboard.putBoolean("Found Line", true);
                 System.out.println("Lidar slope " + getSlope());
-                System.out.println("Angles to rotate " + Math.atan(getSlope()));
+                System.out.println("Angles to rotate " + -Math.atan((1 / getSlope())));
                 return startAndEnd;
             }
             return null;
