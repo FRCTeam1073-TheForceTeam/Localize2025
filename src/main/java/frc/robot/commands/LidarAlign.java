@@ -8,6 +8,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Lidar;
@@ -39,10 +40,9 @@ public class LidarAlign extends Command {
   @Override
   public void execute() {
     hasLine = (lidar.getLine() != null);
-    if(hasLine){
+    if(hasLine && (lidar.findLineSegment(lidar.getLidarArray()) != null)){
       /*1. calculate slope of line detected by lidar */
-      double[] line = lidar.getLine().clone();
-      lidarSlope = -line[0]/line[1];        
+      lidarSlope = lidar.getSlope();   
       /* 2. Find arctan of the difference between their slopes - angle the robot needs to move */
       angleToRotate = Math.atan(lidarSlope);
       /* 3. rotate the robot that to that set angle*/

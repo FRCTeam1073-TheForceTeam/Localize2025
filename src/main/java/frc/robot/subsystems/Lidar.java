@@ -180,11 +180,13 @@ public class Lidar extends DiagnosticsSubsystem {
     public ArrayList<Scan> lidarRANSAC(){
         ransac = new ArrayList<Scan>(getLidarArray());
         bestInliers.clear();
+        if(ransac.size() <= 0){
+            return null;
+        }
         for(int i = 0; i < 10; i++){
             // select two random points
 
             inliers.clear();
-
             rand1 = Math.abs(randy.nextInt(ransac.size()));
             rand2 = Math.abs(randy.nextInt(ransac.size()));
             point1 = ransac.get(rand1);
@@ -216,6 +218,8 @@ public class Lidar extends DiagnosticsSubsystem {
             SmartDashboard.putNumber("Line A Value", a);
             SmartDashboard.putNumber("Line B Value", b);
             SmartDashboard.putNumber("Line C Value", c);
+            SmartDashboard.putNumber("Slope of Lidar Line", getSlope());
+            SmartDashboard.putNumber("Lidar Angle to Rotate", Math.atan(getSlope()));
             return bestInliers;
         }
         else {
@@ -231,8 +235,18 @@ public class Lidar extends DiagnosticsSubsystem {
         return bestLine;
     }
 
+    public double getSlope(){
+        if(getLine() != null){
+            return -bestLine[0]/bestLine[1];
+        }
+        return 0.0;
+    }
+
     public Point[] findLineSegment(ArrayList<Scan> arr){
             points.clear();
+            if(arr == null){
+                return null;
+            }
             points = new ArrayList<Scan>(arr);
         if(points != null && points.size() >= 15){
             System.out.println(points.size());
@@ -246,9 +260,7 @@ public class Lidar extends DiagnosticsSubsystem {
                     // checks the distance of a point in the inlier set to the next point
                     // if the distance between the two points is within 0.05 m, then the points are close enough
                     double xPoint = points.get(i).getX();
-                    System.out.println("X Point of Line " + xPoint);
                     double yPoint = points.get(i).getY();
-                    System.out.println("Y Point of Line " + yPoint);
                     if(Math.sqrt(Math.pow((yPoint - points.get(i + 1).getY()), 2) + Math.pow((xPoint - points.get(i + 1).getX()), 2)) <= 0.05){
                         searchingForStart = false;
                         searchingForEnd = true;
@@ -286,7 +298,8 @@ public class Lidar extends DiagnosticsSubsystem {
                 SmartDashboard.putNumber("End Point X", startAndEnd[1].getX());
                 SmartDashboard.putNumber("End Point Y", startAndEnd[1].getY());
                 SmartDashboard.putBoolean("Found Line", true);
-
+                System.out.println("Lidar slope " + getSlope());
+                System.out.println("Angles to rotate " + Math.atan(getSlope()));
                 return startAndEnd;
             }
             return null;

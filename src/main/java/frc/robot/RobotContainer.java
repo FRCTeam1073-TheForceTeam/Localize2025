@@ -32,8 +32,6 @@ public class RobotContainer
   {
     CommandScheduler.getInstance().setDefaultCommand(m_drivetrain, m_teleopCommand);
 
-    SmartDashboard.putData(m_drivetrain);
-    SmartDashboard.putData(m_OI);
     SmartDashboard.putData(m_lidar);
 
     configureBindings();
@@ -41,7 +39,7 @@ public class RobotContainer
 
   private void configureBindings() {
     Trigger lidarAlign = new Trigger(m_OI::getDriverAButton);
-      lidarAlign.onTrue(m_lidarAlign);
+      lidarAlign.whileTrue(m_lidarAlign);
   }
 
   public Command getAutonomousCommand() 
