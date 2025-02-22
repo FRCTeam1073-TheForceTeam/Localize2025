@@ -17,6 +17,7 @@ import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.OI;
 import frc.robot.subsystems.SwerveModuleConfig;
 import frc.robot.subsystems.Lidar;
+import frc.robot.subsystems.Localizer;
 
 public class RobotContainer 
 {
@@ -39,7 +40,7 @@ public class RobotContainer
 
   private void configureBindings() {
     Trigger lidarAlign = new Trigger(m_OI::getDriverAButton);
-      lidarAlign.whileTrue(m_lidarAlign);
+      lidarAlign.onTrue(m_lidarAlign);
   }
 
   public Command getAutonomousCommand() 

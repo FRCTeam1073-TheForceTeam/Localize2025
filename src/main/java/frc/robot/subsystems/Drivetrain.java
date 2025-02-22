@@ -134,7 +134,7 @@ public class Drivetrain extends DiagnosticsSubsystem
   }
 
   // Returns target angular velocity (for sendable)
-  double getTargetOmega() {
+  public double getTargetOmega() {
     return targetChassisSpeeds.omegaRadiansPerSecond;
   }
 
@@ -324,7 +324,7 @@ public class Drivetrain extends DiagnosticsSubsystem
     }
    
     updateOdometry();
-
+    SmartDashboard.putNumber("Drivetrain Target V Omega", getTargetOmega());
     // Removed this is already in sendable:
     // SmartDashboard.putNumber("Odometry X", getOdometry().getX());
     // SmartDashboard.putNumber("Odometry Y", getOdometry().getY());

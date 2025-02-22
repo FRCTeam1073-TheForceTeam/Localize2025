@@ -8,9 +8,11 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Lidar;
+import frc.robot.subsystems.Localizer;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
 public class LidarAlign extends Command {
@@ -26,7 +28,7 @@ public class LidarAlign extends Command {
   public LidarAlign(Lidar lidar, Drivetrain drivetrain) {
     this.lidar = lidar;
     this.drivetrain = drivetrain;
-    thetaController = new PIDController(0.05, 0, 0);
+    thetaController = new PIDController(1.2, 0, 0.01);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(drivetrain);
   }
@@ -45,29 +47,32 @@ public class LidarAlign extends Command {
       /* 2. Find arctan of the difference between their slopes - angle the robot needs to move */
       angleToRotate = lidar.getAngleToRotate();
       /* 3. rotate the robot that to that set angle*/
-      thetaVelocity = MathUtil.clamp(thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate), -2.0, 2.0);
-      drivetrain.setTargetChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(0, 0, thetaVelocity, new Rotation2d(drivetrain.getWrappedHeadingRadians())));
+      thetaVelocity = thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate);
+      thetaVelocity = MathUtil.clamp(thetaVelocity, -2.0, 2.0);
+      SmartDashboard.putNumber("LidarAlign theta velocity", thetaVelocity);
+      drivetrain.setTargetChassisSpeeds(
+
+        ChassisSpeeds.fromFieldRelativeSpeeds(
+          0, 
+          0, 
+          thetaVelocity, 
+          Rotation2d.fromDegrees(drivetrain.getHeadingDegrees())));
+      SmartDashboard.putNumber("LidarAlign Target V Omega", drivetrain.getTargetOmega());
     }
   }
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    drivetrain.setTargetChassisSpeeds(ChassisSpeeds.fromRobotRelativeSpeeds(0, 0, 0, new Rotation2d()));
+  }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    // if(!hasLine){
-    //   return true;
-    // } 
-    if(lidarSlope == 0){
+    if(Math.abs(lidar.getAngleToRotate()) < 0.01 || Math.abs(lidar.getAngleToRotate()) > 1.7){
       return true;
     }
-    // if(Math.abs(lidar.getFilteredAngleTimestamp() - lidar.getLidarArrayTimestamp()) > 1.0){
-    //   return true;
-    // }
-    else{
-      return false;
-    }
+    return false;
   }
 }
