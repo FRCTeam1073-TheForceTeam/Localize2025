@@ -8,7 +8,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Lidar;
@@ -27,6 +26,7 @@ public class LidarAlign extends Command {
   public LidarAlign(Lidar lidar, Drivetrain drivetrain) {
     this.lidar = lidar;
     this.drivetrain = drivetrain;
+    thetaController = new PIDController(0.05, 0, 0);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(drivetrain);
   }
@@ -42,11 +42,9 @@ public class LidarAlign extends Command {
     hasLine = (lidar.getLine() != null);
     if(hasLine && (lidar.findLineSegment(lidar.getLidarArray()) != null)){
       /*1. calculate slope of line detected by lidar */
-      lidarSlope = lidar.getSlope();   
       /* 2. Find arctan of the difference between their slopes - angle the robot needs to move */
-      angleToRotate = -Math.atan((1 / lidarSlope));
+      angleToRotate = lidar.getAngleToRotate();
       /* 3. rotate the robot that to that set angle*/
-      // TODO: fix thetaController/check if it's null??
       thetaVelocity = MathUtil.clamp(thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate), -2.0, 2.0);
       drivetrain.setTargetChassisSpeeds(ChassisSpeeds.fromFieldRelativeSpeeds(0, 0, thetaVelocity, new Rotation2d(drivetrain.getWrappedHeadingRadians())));
     }
@@ -59,12 +57,15 @@ public class LidarAlign extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    if(!hasLine){
-      return true;
-    } 
-    if(Math.abs(lidarSlope) < 0.07){
+    // if(!hasLine){
+    //   return true;
+    // } 
+    if(lidarSlope == 0){
       return true;
     }
+    // if(Math.abs(lidar.getFilteredAngleTimestamp() - lidar.getLidarArrayTimestamp()) > 1.0){
+    //   return true;
+    // }
     else{
       return false;
     }

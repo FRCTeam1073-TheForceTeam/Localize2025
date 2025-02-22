@@ -3,15 +3,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.SerialPort;
@@ -79,9 +78,11 @@ public class Lidar extends DiagnosticsSubsystem {
     double lidarSlope;
     double robotSlope;
     double angleToRotate;
+    double filteredAngleToRotate;
+    double filteredAngleTimestamp;
     double thetaVelocity;
     double[] bestLine = new double[3]; // a, b, and c value of the best line
-    final double distanceThreshold = 0.005; // maximum distance a point can be from the line to be considered an inlier
+    final double distanceThreshold = 0.05; // maximum distance a point can be from the line to be considered an inlier
     double distance;
     float angle_deg;
     float angle_rad;
@@ -94,7 +95,7 @@ public class Lidar extends DiagnosticsSubsystem {
     final int maxAcceptedAngle1 = 80; // In degrees, for the first range of accepted angles
     final int minAcceptedAngle2 = 280; // In degrees, for the second range of accepted angles
     final int maxAcceptedAngle2 = 360; // In degrees, for the second range of accepted angles
-    private final int minAcceptedQuality = 7;
+    private final int minAcceptedQuality = 5;
     final int minInliers = 10; // minimum number of inliers for a model to be considered valid
     final int maxIterations = 20; // maximum number of iterations to find a model
     int indexOfEnd;
@@ -108,6 +109,7 @@ public class Lidar extends DiagnosticsSubsystem {
     int pointsOnLine;
     int rand1;
     int rand2;
+    LinearFilter filter;
     Transform2d robotToLidar = new Transform2d(new Translation2d(0.27, 0), new Rotation2d()); // Translation needs x and y, rotation needs 
     Matrix<N3,N3> T;
     Point start = new Point(0, 0);
@@ -122,8 +124,6 @@ public class Lidar extends DiagnosticsSubsystem {
     public Lidar () {
         T = robotToLidar.toMatrix();
 
-        thetaController = new PIDController(1.2, 0.0, 0.01);
-
         try{
             serialPort = new SerialPort(460800, SerialPort.Port.kUSB1, 8, SerialPort.Parity.kNone, SerialPort.StopBits.kOne);
         }
@@ -132,6 +132,9 @@ public class Lidar extends DiagnosticsSubsystem {
             serialPort = null;
         }
         if(serialPort != null){
+            // Infinite Impulse Response filter: timeConstant is 0.1 seconds, period is 0.02 seconds
+            filter = LinearFilter.singlePoleIIR(0.1, 0.02);
+            filter.reset(); 
             serialPort.setWriteBufferMode(SerialPort.WriteBufferMode.kFlushOnAccess);
             super.setSubsystem("Lidar");
             serialPort.setFlowControl(SerialPort.FlowControl.kNone);
@@ -183,9 +186,8 @@ public class Lidar extends DiagnosticsSubsystem {
         if(ransac.size() <= 0){
             return null;
         }
-        for(int i = 0; i < 25; i++){
+        for(int i = 0; i < 10; i++){
             // select two random points
-
             inliers.clear();
             rand1 = Math.abs(randy.nextInt(ransac.size()));
             rand2 = Math.abs(randy.nextInt(ransac.size()));
@@ -199,25 +201,20 @@ public class Lidar extends DiagnosticsSubsystem {
             a = point2.getY() - point1.getY();
             b = point1.getX() - point2.getX();
             c = point1.getY() * point2.getX() - point2.getY() * point1.getX();
-            if(Math.abs(a) < 0.075){
+            if(Math.abs(a) < 0.005){
                 a = 0.0;
             }
-            if(Math.abs(b) < 0.075){
+            if(Math.abs(b) < 0.005){
                 b = 0.0;
-            }
-            if(Math.abs(c) < 0.075){
-                c = 0.0;
             }
             for(Scan scan : ransac){
                 distance = Math.abs(a * scan.getX() + b * scan.getY() + c) / Math.sqrt(a * a + b * b);
                 if(distance < distanceThreshold){
                     inliers.add(scan);
-                    // give first and last inlier
-                    // when there's a large gap, drop points
                 }
             }
             // if it's greater than the threshold and better
-            if(inliers.size() > bestInliers.size() && inliers.size() > 45){
+            if(inliers.size() > bestInliers.size() && inliers.size() > 15){
                 bestInliers = inliers;
                 bestLine = new double[] {a, b, c};
             }
@@ -227,8 +224,8 @@ public class Lidar extends DiagnosticsSubsystem {
             SmartDashboard.putNumber("Line A Value", a);
             SmartDashboard.putNumber("Line B Value", b);
             SmartDashboard.putNumber("Line C Value", c);
-            SmartDashboard.putNumber("Slope of Lidar Line", getSlope());
-            SmartDashboard.putNumber("Lidar Angle to Rotate", Math.atan(getSlope()));
+            // TODO: fix slope in method
+            SmartDashboard.putNumber("Slope of Lidar Line", -getSlope());
             return bestInliers;
         }
         else {
@@ -245,12 +242,23 @@ public class Lidar extends DiagnosticsSubsystem {
     }
 
     public double getSlope(){
-        if(getLine() != null && b != 0 && a != 0){
+        if(getLine() != null && b !=0){
             return -a/b;
         }
         else{
             return 0.0;
         }
+    }
+
+    public void filterAngleToRotate(){
+        if(b != 0.0 && getLine() != null){
+            filteredAngleToRotate = filter.calculate(-Math.atan(1 / getSlope()));
+            filteredAngleTimestamp = Timer.getFPGATimestamp();
+        }
+    }
+
+    public double getAngleToRotate(){
+        return filteredAngleToRotate;
     }
 
     public Point[] findLineSegment(ArrayList<Scan> arr){
@@ -260,7 +268,6 @@ public class Lidar extends DiagnosticsSubsystem {
             }
             points = new ArrayList<Scan>(arr);
         if(points != null && points.size() >= 15){
-            System.out.println(points.size());
             pointsOnLine = 0;
             searchingForStart = true;
             searchingForEnd = false;
@@ -275,7 +282,7 @@ public class Lidar extends DiagnosticsSubsystem {
                     if(Math.sqrt(Math.pow((yPoint - points.get(i + 1).getY()), 2) + Math.pow((xPoint - points.get(i + 1).getX()), 2)) <= 0.05){
                         searchingForStart = false;
                         searchingForEnd = true;
-                        pointsOnLine = 1;
+                        pointsOnLine = 2;
                         start.setX(xPoint);
                         start.setY(yPoint);
                     }
@@ -309,6 +316,7 @@ public class Lidar extends DiagnosticsSubsystem {
                 SmartDashboard.putNumber("End Point X", startAndEnd[1].getX());
                 SmartDashboard.putNumber("End Point Y", startAndEnd[1].getY());
                 SmartDashboard.putBoolean("Found Line", true);
+                SmartDashboard.putNumber("Angle to Rotate", -Math.atan((1 / getSlope())));
                 System.out.println("Lidar slope " + getSlope());
                 System.out.println("Angles to rotate " + -Math.atan((1 / getSlope())));
                 return startAndEnd;
@@ -318,7 +326,6 @@ public class Lidar extends DiagnosticsSubsystem {
         return null;
     }
 
-
     public ArrayList<Scan> getLidarArray(){
         if(writeToOne){
             return two; 
@@ -327,7 +334,11 @@ public class Lidar extends DiagnosticsSubsystem {
         }
     }
 
-    public double getTimestamp() {
+    public double getFilteredAngleTimestamp(){
+        return filteredAngleTimestamp;
+    }
+    
+    public double getLidarArrayTimestamp() {
         // return the opposite that is being filled
         if (writeToOne) return arrayTwoTimestamp;
         else return arrayOneTimestamp;
@@ -372,6 +383,7 @@ public class Lidar extends DiagnosticsSubsystem {
                     writeToOne = false;
                     if(arrayTwoFilled && getLidarArray() != null){
                         findLineSegment(lidarRANSAC());
+                        filterAngleToRotate();
                     }
                 }
                 else {
@@ -383,6 +395,7 @@ public class Lidar extends DiagnosticsSubsystem {
                     writeToOne = true;
                     if(getLidarArray() != null){
                         findLineSegment(lidarRANSAC());
+                        filterAngleToRotate();
                     }
                 }
             } 
@@ -398,7 +411,6 @@ public class Lidar extends DiagnosticsSubsystem {
             angle_rad = 3.141592f * angle_deg / 180.0f;
             range_m = (range_mm / 4.0f) / 1000;
             //quality, range, and angle filter
-            if(quality < minAcceptedQuality) recordScan = false;
             if(isAngleGood(angle_deg) == false) recordScan = false;
             if(isRangeGood(range_m) == false) recordScan = false;
 
@@ -435,7 +447,7 @@ public class Lidar extends DiagnosticsSubsystem {
         if(serialPort == null){
             return;
         }
-        if(arrayTwoFilled){
+        if(arrayTwoFilled && getLidarArray().size() > 0){
             SmartDashboard.putNumber("Times Lidar Array Switched", getTimesArraySwitch());
             SmartDashboard.putNumber("Range", getRange());
             SmartDashboard.putNumber("Angle", getAngle());
@@ -444,6 +456,8 @@ public class Lidar extends DiagnosticsSubsystem {
             SmartDashboard.putNumber("LiDAR Y Value", getYVal());
             SmartDashboard.putNumber("Number of Scans in LiDAR Array", getNumberScans());
             SmartDashboard.putNumber("Number of Scans to Read", getNumberScansToRead());
+            SmartDashboard.putNumber("Filtered Angle", getAngleToRotate());
+            SmartDashboard.putNumber("Filter Angle Timestamp", getFilteredAngleTimestamp());
         }
         numBytesAvail = serialPort.getBytesReceived();
          if(measureMode){
@@ -467,7 +481,7 @@ public class Lidar extends DiagnosticsSubsystem {
     public int getTimesArraySwitch(){
         return numTimesLidarArraySwitch;
     }
-
+    // only call these methods if the size of the current lidar array > 0
     public double getRange(){
         return getLidarArray().get(0).getRange();
     }
