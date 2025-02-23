@@ -74,12 +74,14 @@ public class LidarAlign extends Command {
     // if(Math.abs(lidar.getAngleToRotate()) < 0.05 || Math.abs(lidar.getAngleToRotate()) > 1.7){
     //   return true;
     // }
-    if(lidar.getSlopeZero() && lidar.getAngleToRotate() < 0.1){
+    if(Math.abs(lidar.getAngleToRotate()) < 0.03){
       return true;
     }
-    if(lidar.getLidarArrayTimestamp() - lidar.getFilteredAngleTimestamp() > 1.0){
+    else if(lidar.getLidarArrayTimestamp() - lidar.getFilteredAngleTimestamp() > 1.0){
       return true;
     }
-    return false;
+    else{
+      return false;
+    }
   }
 }

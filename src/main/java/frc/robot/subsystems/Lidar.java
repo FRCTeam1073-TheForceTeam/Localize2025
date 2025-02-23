@@ -86,7 +86,7 @@ public class Lidar extends DiagnosticsSubsystem {
     double filteredAngleTimestamp;
     double thetaVelocity;
     double[] bestLine = new double[3]; // a, b, and c value of the best line
-    final double distanceThreshold = 0.05; // maximum distance a point can be from the line to be considered an inlier
+    final double distanceThreshold = 0.025; // maximum distance a point can be from the line to be considered an inlier
     double distance;
     float angle_deg;
     float angle_rad;
@@ -281,8 +281,8 @@ public class Lidar extends DiagnosticsSubsystem {
 
 
     public void filterAngleToRotate(){
-        if(getLine() != null && getAngleToRotate() != Math.PI){
-            filteredAngleToRotate = filter.calculate(Math.atan(getAngleToRotate()));
+        if(getAngleToRotate() != Math.PI){ 
+            filteredAngleToRotate = filter.calculate(getAngleToRotate());
             filteredAngleTimestamp = Timer.getFPGATimestamp();
             if(anglesToRotate.size() >= 3){
                 anglesToRotate.remove(0);
@@ -295,16 +295,13 @@ public class Lidar extends DiagnosticsSubsystem {
     }
 
     public double getAngleToRotate(){
-        if(getSlope() > 100){
+        if(getSlope() > 100){ // flagged as invalid
             return Math.PI;
-        }
-        if(getSlope() == 0){
+        } else if (getSlope() == 0) {
             return 0.0;
-        }
-        else if(b != 0.0 && getLine() != null){
+        } else {
             return Math.atan(1 / getSlope());
         }
-        return Math.PI;
     }
 
     public double getFilteredAngleToRotate(){
