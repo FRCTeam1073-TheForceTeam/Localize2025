@@ -57,7 +57,6 @@ public class LidarAlign extends Command {
           0, 
           thetaVelocity, 
           Rotation2d.fromDegrees(drivetrain.getHeadingDegrees())));
-      SmartDashboard.putNumber("LidarAlign Target V Omega", drivetrain.getTargetOmega());
     }
   }
 
@@ -70,7 +69,13 @@ public class LidarAlign extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    if(Math.abs(lidar.getAngleToRotate()) < 0.01 || Math.abs(lidar.getAngleToRotate()) > 1.7){
+    // if(Math.abs(lidar.getAngleToRotate()) < 0.05 || Math.abs(lidar.getAngleToRotate()) > 1.7){
+    //   return true;
+    // }
+    if(lidar.getSlopeZero()){
+      return true;
+    }
+    if(lidar.getLidarArrayTimestamp() - lidar.getFilteredAngleTimestamp() > 1.0){
       return true;
     }
     return false;

@@ -53,6 +53,8 @@ public class Lidar extends DiagnosticsSubsystem {
     ArrayList <Scan> inliers = new ArrayList<Scan>();
     ArrayList <Scan> points  = new ArrayList<Scan>();
     ArrayList <Scan> bestInliers = new ArrayList<Scan>(); // list of the best inliers for RANSAC
+    ArrayList <Double> anglesToRotate = new ArrayList<Double>();
+    //ArrayList <Double> slopes = new ArrayList<Double>();
     Point[] startAndEnd = new Point[2];
     byte getInfo[] = {(byte) 0xa5, (byte) 0x52};
     byte scanDescriptor[] = {(byte) 0xa5, (byte) 0x5a, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x81};
@@ -64,6 +66,8 @@ public class Lidar extends DiagnosticsSubsystem {
     boolean writeToOne = true;
     boolean searchingForStart = true;
     boolean searchingForEnd = false;
+    boolean lastPositive;
+    boolean positive;
     boolean foundLine = false;
     double arrayOneTimestamp;
     double arrayTwoTimestamp;
@@ -109,6 +113,7 @@ public class Lidar extends DiagnosticsSubsystem {
     int pointsOnLine;
     int rand1;
     int rand2;
+    int slopeCount;
     LinearFilter filter;
     Transform2d robotToLidar = new Transform2d(new Translation2d(0.27, 0), new Rotation2d()); // Translation needs x and y, rotation needs 
     Matrix<N3,N3> T;
@@ -241,9 +246,40 @@ public class Lidar extends DiagnosticsSubsystem {
         return bestLine;
     }
 
+    // public boolean getZeroSlope(){
+    //     if(slopes.size() >= 10){
+    //         slopeCount = 0;
+    //         for(int i = 0; i < slopes.size(); i++){
+    //             if(slopes.get(i) == 0.0){
+    //                 slopeCount ++;
+    //             }
+    //         }
+    //         if(slopeCount >= 6){
+    //             return true;
+    //         }
+    //     }
+    //     return false;
+    // }
+
+    public boolean getSlopeZero(){
+        if(anglesToRotate.size() >= 2){
+            lastPositive = anglesToRotate.get(anglesToRotate.size() - 2) > 0;
+            positive = anglesToRotate.get(anglesToRotate.size() - 1) > 0;
+            return lastPositive != positive;
+        }
+        return false;
+    }
+
     public double getSlope(){
         if(getLine() != null && b !=0){
-            return -a/b;
+            // if(slopes.size() < 3){
+            //     slopes.add(a/b);
+            // }
+            // else{
+            //     slopes.remove(0);
+            //     slopes.add(a/b);
+            // }
+            return a/b;
         }
         else{
             return 0.0;
@@ -252,12 +288,19 @@ public class Lidar extends DiagnosticsSubsystem {
 
     public void filterAngleToRotate(){
         if(b != 0.0 && getLine() != null){
-            filteredAngleToRotate = filter.calculate(-Math.atan(1 / getSlope()));
+            filteredAngleToRotate = filter.calculate(Math.atan(1 / getSlope()));
             filteredAngleTimestamp = Timer.getFPGATimestamp();
         }
     }
 
     public double getAngleToRotate(){
+        if(anglesToRotate.size() < 3){
+            anglesToRotate.add(filteredAngleToRotate);
+         }
+        else{
+            anglesToRotate.remove(0);
+            anglesToRotate.add(filteredAngleToRotate);
+        }
         return filteredAngleToRotate;
     }
 
@@ -316,9 +359,9 @@ public class Lidar extends DiagnosticsSubsystem {
                 SmartDashboard.putNumber("End Point X", startAndEnd[1].getX());
                 SmartDashboard.putNumber("End Point Y", startAndEnd[1].getY());
                 SmartDashboard.putBoolean("Found Line", true);
-                SmartDashboard.putNumber("Angle to Rotate", -Math.atan((1 / getSlope())));
+                SmartDashboard.putNumber("Angle to Rotate", Math.atan((1 / getSlope())));
                 System.out.println("Lidar slope " + getSlope());
-                System.out.println("Angles to rotate " + -Math.atan((1 / getSlope())));
+                System.out.println("Angles to rotate " + Math.atan((1 / getSlope())));
                 return startAndEnd;
             }
             return null;
@@ -458,6 +501,7 @@ public class Lidar extends DiagnosticsSubsystem {
             SmartDashboard.putNumber("Number of Scans to Read", getNumberScansToRead());
             SmartDashboard.putNumber("Filtered Angle", getAngleToRotate());
             SmartDashboard.putNumber("Filter Angle Timestamp", getFilteredAngleTimestamp());
+            SmartDashboard.putBoolean("Lidar Slope is Zero", getSlopeZero());
         }
         numBytesAvail = serialPort.getBytesReceived();
          if(measureMode){
