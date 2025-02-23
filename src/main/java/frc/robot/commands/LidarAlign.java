@@ -49,8 +49,8 @@ public class LidarAlign extends Command {
       /* 2. Find arctan of the difference between their slopes - angle the robot needs to move */
       angleToRotate = lidar.getAngleToRotate();
       /* 3. rotate the robot that to that set angle*/
-      thetaVelocity = 0.8 * thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate);
-      thetaVelocity = MathUtil.clamp(thetaVelocity, -1.5, 1.5);
+      thetaVelocity = thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate);
+      thetaVelocity = MathUtil.clamp(thetaVelocity, -2, 2);
       SmartDashboard.putNumber("LidarAlign theta velocity", thetaVelocity);
       drivetrain.setTargetChassisSpeeds(
 
@@ -74,7 +74,7 @@ public class LidarAlign extends Command {
     // if(Math.abs(lidar.getAngleToRotate()) < 0.05 || Math.abs(lidar.getAngleToRotate()) > 1.7){
     //   return true;
     // }
-    if(Math.abs(lidar.getAngleToRotate()) < 0.03){
+    if(Math.abs(lidar.getAngleToRotate()) < 0.02){
       return true;
     }
     else if(lidar.getLidarArrayTimestamp() - lidar.getFilteredAngleTimestamp() > 1.0){
