@@ -86,7 +86,7 @@ public class Lidar extends DiagnosticsSubsystem {
     double filteredAngleTimestamp;
     double thetaVelocity;
     double[] bestLine = new double[3]; // a, b, and c value of the best line
-    final double distanceThreshold = 0.025; // maximum distance a point can be from the line to be considered an inlier
+    final double distanceThreshold = 0.01; // maximum distance a point can be from the line to be considered an inlier
     double distance;
     float angle_deg;
     float angle_rad;
@@ -219,8 +219,9 @@ public class Lidar extends DiagnosticsSubsystem {
                 }
             }
             // if it's greater than the threshold and better
-            if(inliers.size() > bestInliers.size() && inliers.size() > 15){
+            if(inliers.size() > bestInliers.size() && inliers.size() > 17){
                 bestInliers = inliers;
+                SmartDashboard.putNumber("Best Inlier Size", bestInliers.size());
                 bestLine = new double[] {a, b, c};
             }
         }
