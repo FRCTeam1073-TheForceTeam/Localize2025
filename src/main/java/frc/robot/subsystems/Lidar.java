@@ -99,7 +99,7 @@ public class Lidar extends DiagnosticsSubsystem {
     final int maxAcceptedAngle1 = 80; // In degrees, for the first range of accepted angles
     final int minAcceptedAngle2 = 280; // In degrees, for the second range of accepted angles
     final int maxAcceptedAngle2 = 360; // In degrees, for the second range of accepted angles
-    private final int minAcceptedQuality = 5;
+    private final int minAcceptedQuality = 10;
     final int minInliers = 10; // minimum number of inliers for a model to be considered valid
     final int maxIterations = 20; // maximum number of iterations to find a model
     int indexOfEnd;
@@ -272,35 +272,42 @@ public class Lidar extends DiagnosticsSubsystem {
 
     public double getSlope(){
         if(getLine() != null && b !=0){
-            // if(slopes.size() < 3){
-            //     slopes.add(a/b);
-            // }
-            // else{
-            //     slopes.remove(0);
-            //     slopes.add(a/b);
-            // }
             return a/b;
         }
         else{
-            return 0.0;
+            return 100;
         }
     }
 
+
     public void filterAngleToRotate(){
-        if(b != 0.0 && getLine() != null){
-            filteredAngleToRotate = filter.calculate(Math.atan(1 / getSlope()));
+        if(getLine() != null && getAngleToRotate() != Math.PI){
+            filteredAngleToRotate = filter.calculate(Math.atan(getAngleToRotate()));
             filteredAngleTimestamp = Timer.getFPGATimestamp();
+            if(anglesToRotate.size() >= 3){
+                anglesToRotate.remove(0);
+                anglesToRotate.add(filteredAngleToRotate);
+            }
+            else{
+                anglesToRotate.add(filteredAngleToRotate);
+            }
         }
     }
 
     public double getAngleToRotate(){
-        if(anglesToRotate.size() < 3){
-            anglesToRotate.add(filteredAngleToRotate);
-         }
-        else{
-            anglesToRotate.remove(0);
-            anglesToRotate.add(filteredAngleToRotate);
+        if(getSlope() > 100){
+            return Math.PI;
         }
+        if(getSlope() == 0){
+            return 0.0;
+        }
+        else if(b != 0.0 && getLine() != null){
+            return Math.atan(1 / getSlope());
+        }
+        return Math.PI;
+    }
+
+    public double getFilteredAngleToRotate(){
         return filteredAngleToRotate;
     }
 
@@ -499,7 +506,7 @@ public class Lidar extends DiagnosticsSubsystem {
             SmartDashboard.putNumber("LiDAR Y Value", getYVal());
             SmartDashboard.putNumber("Number of Scans in LiDAR Array", getNumberScans());
             SmartDashboard.putNumber("Number of Scans to Read", getNumberScansToRead());
-            SmartDashboard.putNumber("Filtered Angle", getAngleToRotate());
+            SmartDashboard.putNumber("Filtered Angle", getFilteredAngleToRotate());
             SmartDashboard.putNumber("Filter Angle Timestamp", getFilteredAngleTimestamp());
             SmartDashboard.putBoolean("Lidar Slope is Zero", getSlopeZero());
         }

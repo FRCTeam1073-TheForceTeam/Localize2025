@@ -28,7 +28,8 @@ public class LidarAlign extends Command {
   public LidarAlign(Lidar lidar, Drivetrain drivetrain) {
     this.lidar = lidar;
     this.drivetrain = drivetrain;
-    thetaController = new PIDController(1.2, 0, 0.01);
+    thetaController = new PIDController(0.8, 0, 0.01);
+    thetaController.enableContinuousInput(-Math.PI/2, Math.PI/2);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(drivetrain);
   }
@@ -36,6 +37,7 @@ public class LidarAlign extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    thetaController.reset();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -47,8 +49,8 @@ public class LidarAlign extends Command {
       /* 2. Find arctan of the difference between their slopes - angle the robot needs to move */
       angleToRotate = lidar.getAngleToRotate();
       /* 3. rotate the robot that to that set angle*/
-      thetaVelocity = thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate);
-      thetaVelocity = MathUtil.clamp(thetaVelocity, -2.0, 2.0);
+      thetaVelocity = 0.8 * thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate);
+      thetaVelocity = MathUtil.clamp(thetaVelocity, -1.5, 1.5);
       SmartDashboard.putNumber("LidarAlign theta velocity", thetaVelocity);
       drivetrain.setTargetChassisSpeeds(
 
@@ -72,7 +74,7 @@ public class LidarAlign extends Command {
     // if(Math.abs(lidar.getAngleToRotate()) < 0.05 || Math.abs(lidar.getAngleToRotate()) > 1.7){
     //   return true;
     // }
-    if(lidar.getSlopeZero()){
+    if(lidar.getSlopeZero() && lidar.getAngleToRotate() < 0.1){
       return true;
     }
     if(lidar.getLidarArrayTimestamp() - lidar.getFilteredAngleTimestamp() > 1.0){

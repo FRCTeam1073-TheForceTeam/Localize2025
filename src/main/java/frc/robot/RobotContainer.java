@@ -40,7 +40,7 @@ public class RobotContainer
 
   private void configureBindings() {
     Trigger lidarAlign = new Trigger(m_OI::getDriverAButton);
-      lidarAlign.onTrue(m_lidarAlign);
+      lidarAlign.whileTrue(m_lidarAlign);
   }
 
   public Command getAutonomousCommand() 
