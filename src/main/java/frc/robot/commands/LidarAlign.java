@@ -44,7 +44,8 @@ public class LidarAlign extends Command {
   @Override
   public void execute() {
     hasLine = (lidar.getLine() != null);
-    if(hasLine && (lidar.findLineSegment(lidar.getLidarArray()) != null)){
+    if(hasLine){
+    //if(hasLine && (lidar.findLineSegment(lidar.getLidarArray()) != null)){
       /*1. calculate slope of line detected by lidar */
       /* 2. Find arctan of the difference between their slopes - angle the robot needs to move */
       angleToRotate = lidar.getAngleToRotate();

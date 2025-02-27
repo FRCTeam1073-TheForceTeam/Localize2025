@@ -129,6 +129,9 @@ public class OI extends DiagnosticsSubsystem
 
   public double getDriverLeftTrigger()
   {
+    if(Math.abs(driverController.getRawAxis(2)) < 0.5){
+      return 0.0;
+    }
     return driverController.getRawAxis(2);
   }
 

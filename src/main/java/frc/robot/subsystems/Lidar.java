@@ -175,7 +175,7 @@ public class Lidar extends DiagnosticsSubsystem {
             }
             counter ++;
         }
-        
+
         if(counter >= 15){
             serialPort = null;
         }
@@ -269,7 +269,6 @@ public class Lidar extends DiagnosticsSubsystem {
         }
     }
 
-
     public void filterAngleToRotate(){
         if(getAngleToRotate() != Math.PI){ 
             filteredAngleToRotate = filter.calculate(getAngleToRotate());
@@ -347,8 +346,6 @@ public class Lidar extends DiagnosticsSubsystem {
                 SmartDashboard.putNumber("End Point Y", startAndEnd[1].getY());
                 SmartDashboard.putBoolean("Found Line", true);
                 SmartDashboard.putNumber("Angle to Rotate", Math.atan((1 / getSlope())));
-                System.out.println("Lidar slope " + getSlope());
-                System.out.println("Angles to rotate " + Math.atan((1 / getSlope())));
                 return startAndEnd;
             }
             return null;
@@ -376,9 +373,9 @@ public class Lidar extends DiagnosticsSubsystem {
 
 
     public boolean parseDescriptor(){
-        System.out.println("Parsing lidar scan descriptor");
+        //System.out.println("Parsing lidar scan descriptor");
         byte [] received = serialPort.read(7);
-        System.out.println("Scan descriptor received from serialPort");
+        //System.out.println("Scan descriptor received from serialPort");
         // for(int i = 0; i < received.length; i++){
         //     System.out.println(String.format("0x%02x", received[i]));
         // }
@@ -485,6 +482,7 @@ public class Lidar extends DiagnosticsSubsystem {
             SmartDashboard.putNumber("LiDAR X Value", getXVal());
             SmartDashboard.putNumber("LiDAR Y Value", getYVal());
             SmartDashboard.putNumber("LiDAR R Value", getRVal());
+            SmartDashboard.putBoolean("Against Reef", againstReef());
             SmartDashboard.putNumber("Number of Scans in LiDAR Array", getNumberScans());
             SmartDashboard.putNumber("Number of Scans to Read", getNumberScansToRead());
             SmartDashboard.putNumber("Filtered Angle", getFilteredAngleToRotate());
@@ -501,7 +499,7 @@ public class Lidar extends DiagnosticsSubsystem {
                 if(parseDescriptor()){
                     // expected descriptor received, switch to read data
                     measureMode = true;
-                    System.out.println("Started Lidar measurement mode");
+                    //System.out.println("Started Lidar measurement mode");
                 }
                 else{
                     System.out.println("Lidar handshake error");
@@ -533,6 +531,10 @@ public class Lidar extends DiagnosticsSubsystem {
         return getLidarArray().get(0).getX() * Math.cos(getAngle());
     }
     
+    public boolean againstReef(){
+        return Math.abs(getRVal() - 0.385) <= 0.005;
+    }
+
     public double getYVal(){
         return getLidarArray().get(0).getY();
     }
