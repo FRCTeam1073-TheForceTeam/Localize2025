@@ -25,7 +25,7 @@ public class RobotContainer
   private final OI m_OI = new OI();
   private final AprilTagFinder m_aprilTagFinder = new AprilTagFinder();
   private final Lidar m_lidar = new Lidar();
-  private final LidarAlign m_lidarAlign = new LidarAlign(m_lidar, m_drivetrain);
+  // private final LidarAlign m_lidarAlign = new LidarAlign(m_lidar, m_drivetrain);
 
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder);
 
@@ -33,14 +33,12 @@ public class RobotContainer
   {
     CommandScheduler.getInstance().setDefaultCommand(m_drivetrain, m_teleopCommand);
 
-    SmartDashboard.putData(m_lidar);
-
     configureBindings();
   }
 
   private void configureBindings() {
-    Trigger lidarAlign = new Trigger(m_OI::getDriverAButton);
-      lidarAlign.whileTrue(m_lidarAlign);
+    Trigger Align = new Trigger(m_OI::getDriverBButton);
+      // lidarAlignlidar.whileTrue(m_lidarAlign);
   }
 
   public Command getAutonomousCommand() 
