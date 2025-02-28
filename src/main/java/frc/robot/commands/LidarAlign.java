@@ -43,12 +43,11 @@ public class LidarAlign extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    hasLine = (lidar.getLine() != null);
-    if(hasLine){
+    //hasLine = (lidar.getLine() != null);
     //if(hasLine && (lidar.findLineSegment(lidar.getLidarArray()) != null)){
       /*1. calculate slope of line detected by lidar */
       /* 2. Find arctan of the difference between their slopes - angle the robot needs to move */
-      angleToRotate = lidar.getAngleToRotate();
+      //angleToRotate = lidar.getAngleToRotate();
       /* 3. rotate the robot that to that set angle*/
       thetaVelocity = thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate);
       thetaVelocity = MathUtil.clamp(thetaVelocity, -2, 2);
@@ -60,7 +59,6 @@ public class LidarAlign extends Command {
           0, 
           thetaVelocity, 
           Rotation2d.fromDegrees(drivetrain.getHeadingDegrees())));
-    }
   }
 
   // Called once the command ends or is interrupted.
@@ -75,14 +73,12 @@ public class LidarAlign extends Command {
     // if(Math.abs(lidar.getAngleToRotate()) < 0.05 || Math.abs(lidar.getAngleToRotate()) > 1.7){
     //   return true;
     // }
-    if(Math.abs(lidar.getAngleToRotate()) < 0.02){
-      return true;
-    }
-    else if(lidar.getLidarArrayTimestamp() - lidar.getFilteredAngleTimestamp() > 1.0){
-      return true;
-    }
-    else{
+    // if(Math.abs(lidar.getAngleToRotate()) < 0.02){
+    //   return true;
+    // }
+    // else if(lidar.getLidarArrayTimestamp() - lidar.getFilteredAngleTimestamp() > 1.0){
+    //   return true;
+    // }
       return false;
-    }
   }
 }
