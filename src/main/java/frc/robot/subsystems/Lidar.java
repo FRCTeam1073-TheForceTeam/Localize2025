@@ -53,6 +53,11 @@ public class Lidar extends DiagnosticsSubsystem {
     ArrayList <Scan> inliers = new ArrayList<Scan>();
     ArrayList <Scan> bestInliers = new ArrayList<Scan>();
     ArrayList <Scan> points  = new ArrayList<Scan>();
+    ArrayList <Double> xVal1 = new ArrayList<Double>();
+    ArrayList <Double> yVal1 = new ArrayList<Double>();
+    ArrayList <Double> xVal2 = new ArrayList<Double>();
+    ArrayList <Double> yVal2 = new ArrayList<Double>();
+    ArrayList <Scan> principle = new ArrayList<Scan>();
     Point[] startAndEnd = new Point[2];
     byte getInfo[] = {(byte) 0xa5, (byte) 0x52};
     byte scanDescriptor[] = {(byte) 0xa5, (byte) 0x5a, (byte) 0x05, (byte) 0x00, (byte) 0x00, (byte) 0x40, (byte) 0x81};
@@ -83,6 +88,25 @@ public class Lidar extends DiagnosticsSubsystem {
     double filteredAngleToRotate;
     double filteredAngleTimestamp;
     double thetaVelocity;
+    double sumx = 0;
+    double sumy = 0;
+    double sumxx = 0;
+    double sumyy = 0;
+    double sumxy = 0;
+    double xbar = 0;
+    double ybar = 0;
+    double varx = 0;
+    double vary = 0;
+    double covxy = 0;
+    double sumvars = 0;
+    double diffvars = 0;
+    double discriminant = 0;
+    double sqrtdiscr = 0;
+    double lambdaplus, lambdaminus;
+    double aplus, bplus, aminus, bminus;
+    double aParallel, aNormal, bParallel, bNormal;
+    double k = 2;
+    double denomPlus, denomMinus, majoraxis, minoraxis;
     double[] bestLine = new double[3]; // a, b, and c value of the best line
     final double distanceThreshold = 0.02; // maximum distance a point can be from the line to be considered an inlier
     double distance;
@@ -97,7 +121,7 @@ public class Lidar extends DiagnosticsSubsystem {
     final int maxAcceptedAngle1 = 80; // In degrees, for the first range of accepted angles
     final int minAcceptedAngle2 = 280; // In degrees, for the second range of accepted angles
     final int maxAcceptedAngle2 = 360; // In degrees, for the second range of accepted angles
-    private final int minAcceptedQuality = 10;
+    private final int minAcceptedQuality = 5;
     final int minInliers = 10; // minimum number of inliers for a model to be considered valid
     final int maxIterations = 20; // maximum number of iterations to find a model
     int indexOfEnd;
@@ -256,6 +280,24 @@ public class Lidar extends DiagnosticsSubsystem {
     // searching for beginning or searching for the end
     // index of beginning and end
     // outputs endpoint
+    public void averageXVals(){
+        double average = 0;
+        double count = 0;
+        for(int i = 0; i < getLidarArray().size(); i++){
+            average += getLidarArray().get(i).getX();
+            count ++;
+        }
+        SmartDashboard.putNumber("Average X Values", average/count);
+    }
+
+    public void printXVals(){
+        SmartDashboard.putString("LiDAR X Array", getXValArray().toString());
+    }
+
+    public void printYVals(){
+        SmartDashboard.putString("LiDAR Y Array", getYValArray().toString());
+    }
+
     public double[] getLine(){
         return bestLine;
     }
@@ -361,6 +403,23 @@ public class Lidar extends DiagnosticsSubsystem {
         }
     }
 
+    public ArrayList<Double> getXValArray(){
+        
+        if(writeToOne){
+            return xVal2; 
+        } else {
+            return xVal1;
+        }
+    }
+
+    public ArrayList<Double> getYValArray(){
+        if(writeToOne){
+            return yVal2; 
+        } else {
+            return yVal1;
+        }
+    }
+
     public double getFilteredAngleTimestamp(){
         return filteredAngleTimestamp;
     }
@@ -405,24 +464,32 @@ public class Lidar extends DiagnosticsSubsystem {
                 if(writeToOne){
                     //done writing to one, switching to writing to two - sets the timestamp for array two
                     two.clear();
+                    xVal2.clear();
+                    yVal2.clear();
                     arrayTwoTimestamp = Timer.getFPGATimestamp();
                     numTimesLidarArraySwitch ++;
                     writeToOne = false;
+                    averageXVals();
                     if(arrayTwoFilled && getLidarArray() != null){
-                        findLineSegment(lidarRANSAC());
-                        filterAngleToRotate();
+                        principleComp();
+                        // findLineSegment(lidarRANSAC());
+                        // filterAngleToRotate();
                     }
                 }
                 else {
                     //done writing to two, switching to writing to one - sets the timestamp for array one
                     one.clear();
+                    xVal1.clear();
+                    yVal1.clear();
                     arrayOneTimestamp = Timer.getFPGATimestamp();
                     numTimesLidarArraySwitch ++;
                     arrayTwoFilled = true;
                     writeToOne = true;
+                    averageXVals();
                     if(getLidarArray() != null){
-                        findLineSegment(lidarRANSAC());
-                        filterAngleToRotate();
+                        principleComp();
+                        //findLineSegment(lidarRANSAC());
+                        //filterAngleToRotate();
                     }
                 }
             } 
@@ -447,13 +514,71 @@ public class Lidar extends DiagnosticsSubsystem {
                 Matrix<N3, N1> lidarPoint = VecBuilder.fill(x_l, y_l, 1.0);
                 Matrix<N3, N1> robotPoint = T.times(lidarPoint);
                 if(writeToOne && one.size() < 512){
+                xVal1.add(robotPoint.get(0,0));
+                yVal1.add(robotPoint.get(1,0));
                 one.add(new Scan(range_m, angle_rad, quality, robotPoint.get(0,0), robotPoint.get(1, 0)));
                 } 
                 else if(!writeToOne && two.size() < 512){
+                    xVal2.add(robotPoint.get(0,0));
+                    yVal2.add(robotPoint.get(1,0));
                 two.add(new Scan(range_m, angle_rad, quality, robotPoint.get(0,0), robotPoint.get(1, 0)));
                 }
             }
             
+        }
+    }
+
+    public void principleComp(){
+        principle.clear();
+        sumx = 0; 
+        sumy = 0; 
+        sumxx = 0; 
+        sumyy = 0; 
+        sumxy = 0; 
+        principle = new ArrayList<Scan>(getLidarArray());
+        if(getLidarArray() != null && getLidarArray().size() > 0){
+            for(int i = 0; i < principle.size(); i++){
+                sumx += principle.get(i).getX();
+                sumy += principle.get(i).getY();
+                sumxx += (principle.get(i).getX() * principle.get(i).getX());
+                sumyy += (principle.get(i).getY() * principle.get(i).getY());
+                sumxy += (principle.get(i).getX() * principle.get(i).getY());
+            }
+    
+            // baricenter - averages
+            xbar = sumx / principle.size();
+            ybar = sumy / principle.size();
+    
+            // variances and covariances
+            varx = sumxx / principle.size() - xbar * xbar;
+            vary = sumyy / principle.size() - ybar * ybar;
+            covxy = sumxy / principle.size() - xbar * ybar;
+            sumvars = varx + vary;
+            diffvars = varx - vary;
+            discriminant = diffvars*diffvars + 4 * covxy * covxy;
+            sqrtdiscr = Math.sqrt(discriminant);
+    
+            // eigenvalues
+            lambdaplus = (sumvars + sqrtdiscr) / 2;
+            lambdaminus = (sumvars - sqrtdiscr) / 2;
+            //eigenvectors - components of the two vectors
+            aplus = varx + covxy - lambdaminus;
+            aminus = varx + covxy - lambdaplus;
+            bplus = vary + covxy - lambdaminus;
+            bminus = vary + covxy - lambdaplus;
+            
+            // Normalizing the vectors
+            denomPlus = Math.sqrt(aplus * aplus + bplus * bplus);
+            denomMinus = Math.sqrt(aminus * aminus + bminus * bminus);
+    
+            aParallel = aplus/denomPlus;
+            bParallel = bplus/denomPlus;
+            aNormal = aminus/denomMinus;
+            bNormal = bplus/denomMinus;
+    
+            majoraxis = k * Math.sqrt(lambdaplus);
+            minoraxis = k * Math.sqrt(lambdaminus);
+            SmartDashboard.putNumber("Covxy", covxy);
         }
     }
 

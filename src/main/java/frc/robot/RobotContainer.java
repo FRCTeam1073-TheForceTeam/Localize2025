@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.LidarAlign;
+import frc.robot.commands.PrintXandY;
 import frc.robot.commands.TeleopDrive;
 import frc.robot.subsystems.AprilTagFinder;
 import frc.robot.subsystems.Drivetrain;
@@ -25,6 +26,7 @@ public class RobotContainer
   private final OI m_OI = new OI();
   private final AprilTagFinder m_aprilTagFinder = new AprilTagFinder();
   private final Lidar m_lidar = new Lidar();
+  private final PrintXandY m_print = new PrintXandY(m_lidar);
   //private final LidarAlign m_lidarAlign = new LidarAlign(m_lidar, m_drivetrain);
 
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI, m_aprilTagFinder);
@@ -39,6 +41,8 @@ public class RobotContainer
   private void configureBindings() {
     //Trigger Align = new Trigger(m_OI::getDriverBButton);
       // lidarAlignlidar.whileTrue(m_lidarAlign);
+    Trigger print = new Trigger(m_OI::getDriverRightJoystick);
+      print.whileTrue(m_print);
   }
 
   public Command getAutonomousCommand() 

@@ -122,6 +122,10 @@ public class OI extends DiagnosticsSubsystem
     return driverController.getRawButton(i);
   }
 
+  public boolean getDriverRightJoystick(){
+    return getDriverRawButton(10);
+  }
+
   public double getDriverRightTrigger()
   {
     return driverController.getRawAxis(3);
