@@ -40,7 +40,7 @@ public class RobotContainer
 
   private void configureBindings() {
     Trigger lidarAlign = new Trigger(m_OI::getDriverBButton);
-      lidarAlign.whileTrue(m_lidarAlign);
+      lidarAlign.onTrue(m_lidarAlign);
     // Trigger print = new Trigger(m_OI::getDriverRightJoystick);
     //   print.whileTrue(m_print);
   }

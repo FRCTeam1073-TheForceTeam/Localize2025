@@ -48,10 +48,10 @@ public class LidarAlign extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-      if(lidar.getCovxy() < 0 && !lidar.getCovxyAtZero()) sign = 1;
-      if(lidar.getCovxy() > 0 && !lidar.getCovxyAtZero()) sign = -1;
-      if(lidar.getCovxy() == 0 && !lidar.getCovxyAtZero()) sign = 0;
-      
+      if(lidar.getCovxy() < 0 && !lidar.getCovxyAtZero() && !lidar.getCovxyIsBad()) sign = 1;
+      if(lidar.getCovxy() > 0 && !lidar.getCovxyAtZero() && !lidar.getCovxyIsBad()) sign = -1;
+      if(lidar.getCovxy() == 0 && !lidar.getCovxyAtZero() && !lidar.getCovxyIsBad()) sign = 0;
+
       thetaVelocity = sign * 0.2;
       // thetaVelocity = thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate);
       // thetaVelocity = MathUtil.clamp(thetaVelocity, -2, 2);

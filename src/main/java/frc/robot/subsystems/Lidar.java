@@ -589,7 +589,7 @@ public class Lidar extends DiagnosticsSubsystem {
     }
 
     public boolean getCovxyIsBad(){
-        if(Math.abs(varx) > 0.005 && Math.abs(varx/covxy) > 0.05){
+        if(Math.abs(varx) > 0.005 && Math.abs(varx/covxy) > 0.04){
             return true;
         }
         return false;
