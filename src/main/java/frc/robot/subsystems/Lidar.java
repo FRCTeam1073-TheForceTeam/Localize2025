@@ -467,8 +467,8 @@ public class Lidar extends DiagnosticsSubsystem {
                 if(writeToOne){
                     //done writing to one, switching to writing to two - sets the timestamp for array two
                     two.clear();
-                    xVal2.clear();
-                    yVal2.clear();
+                    // xVal2.clear();
+                    // yVal2.clear();
                     arrayTwoTimestamp = Timer.getFPGATimestamp();
                     numTimesLidarArraySwitch ++;
                     writeToOne = false;
@@ -479,8 +479,8 @@ public class Lidar extends DiagnosticsSubsystem {
                 else {
                     //done writing to two, switching to writing to one - sets the timestamp for array one
                     one.clear();
-                    xVal1.clear();
-                    yVal1.clear();
+                    // xVal1.clear();
+                    // yVal1.clear();
                     arrayOneTimestamp = Timer.getFPGATimestamp();
                     numTimesLidarArraySwitch ++;
                     arrayTwoFilled = true;
@@ -511,14 +511,14 @@ public class Lidar extends DiagnosticsSubsystem {
                 Matrix<N3, N1> lidarPoint = VecBuilder.fill(x_l, y_l, 1.0);
                 Matrix<N3, N1> robotPoint = T.times(lidarPoint);
                 if(writeToOne && one.size() < 512){
-                    xVal1.add(robotPoint.get(0,0));
-                    yVal1.add(robotPoint.get(1,0));
-                one.add(new Scan(range_m, angle_rad, quality, robotPoint.get(0,0), robotPoint.get(1, 0)));
+                    // xVal1.add(robotPoint.get(0,0));
+                    // yVal1.add(robotPoint.get(1,0));
+                    one.add(new Scan(range_m, angle_rad, quality, robotPoint.get(0,0), robotPoint.get(1, 0)));
                 } 
                 else if(!writeToOne && two.size() < 512){
-                    xVal2.add(robotPoint.get(0,0));
-                    yVal2.add(robotPoint.get(1,0));
-                two.add(new Scan(range_m, angle_rad, quality, robotPoint.get(0,0), robotPoint.get(1, 0)));
+                    // xVal2.add(robotPoint.get(0,0));
+                    // yVal2.add(robotPoint.get(1,0));
+                    two.add(new Scan(range_m, angle_rad, quality, robotPoint.get(0,0), robotPoint.get(1, 0)));
                 }
             }
             
@@ -571,15 +571,32 @@ public class Lidar extends DiagnosticsSubsystem {
             aParallel = aplus/denomPlus;
             bParallel = bplus/denomPlus;
             aNormal = aminus/denomMinus;
-            bNormal = bplus/denomMinus;
+            bNormal = bminus/denomMinus;
     
             majoraxis = k * Math.sqrt(lambdaplus);
             minoraxis = k * Math.sqrt(lambdaminus);
-            SmartDashboard.putNumber("Lidar/Covxy", covxy);
-            SmartDashboard.putNumber("Lidar/Sqrt Covxy", getSqrtCovxy());
+            if(!getCovxyIsBad()){
+                SmartDashboard.putNumber("Lidar/Covxy", covxy);
+                SmartDashboard.putNumber("Lidar/Sqrt Covxy", getSqrtCovxy());
+                SmartDashboard.putBoolean("Lidar/is at zero", getCovxyAtZero());
+            }
             SmartDashboard.putNumber("Lidar/Mean X", xbar);
             SmartDashboard.putNumber("Lidar/Mean Y", ybar);
+            SmartDashboard.putNumber("Lidar/varx", varx);
+            SmartDashboard.putNumber("Lidar/vary", vary);
+            SmartDashboard.putBoolean("Lidar/covxy is bad", getCovxyIsBad());
         }
+    }
+
+    public boolean getCovxyIsBad(){
+        if(Math.abs(varx) > 0.005 && Math.abs(varx/covxy) > 0.05){
+            return true;
+        }
+        return false;
+    }
+
+    public boolean getCovxyAtZero(){
+        return Math.abs(getCovxy()) < 0.0005;
     }
 
     public double getCovxy(){
@@ -589,6 +606,7 @@ public class Lidar extends DiagnosticsSubsystem {
     public double getSqrtCovxy(){
         if(covxy < 0) sign = -1;
         if(covxy > 0) sign = 1;
+        if(covxy == 0) sign = 0;
         mag = Math.abs(covxy);
         mag = Math.sqrt(mag);
         return sign * mag;

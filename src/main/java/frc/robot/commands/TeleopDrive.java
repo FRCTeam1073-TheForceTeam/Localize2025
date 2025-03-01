@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import frc.robot.subsystems.AprilTagFinder;
+//import frc.robot.subsystems.AprilTagFinder;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.OI;
 
@@ -34,7 +34,7 @@ public class TeleopDrive extends SchemaArbiter
   TeleopTranslateSchema translateSchema;
   TeleopRotateSchema rotateSchema;
   boolean pointAtTarget;
-  AprilTagFinder aprilTagFinder;
+  //AprilTagFinder aprilTagFinder;
 
   PIDController snapPidProfile;
 
@@ -44,7 +44,7 @@ public class TeleopDrive extends SchemaArbiter
 
 
   /** Creates a new Teleop. */
-  public TeleopDrive(Drivetrain ds, OI oi, AprilTagFinder finder) 
+  public TeleopDrive(Drivetrain ds, OI oi) 
   {
     super(ds, true, false);
     super.setName("Teleop Drive");
@@ -58,7 +58,7 @@ public class TeleopDrive extends SchemaArbiter
       0.05, 
       0.0, 
       0.0);
-    aprilTagFinder = finder;
+    //aprilTagFinder = finder;
     translateSchema = new TeleopTranslateSchema(m_OI, maximumLinearVelocity);
     rotateSchema = new TeleopRotateSchema(m_OI, maximumRotationVelocity);
     addSchema(translateSchema);
