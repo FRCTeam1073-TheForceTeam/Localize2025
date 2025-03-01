@@ -22,13 +22,18 @@ public class LidarAlign extends Command {
   Drivetrain drivetrain;
   double lidarSlope;
   double angleToRotate;
+  double xToDrive;
   double thetaVelocity;
+  double vx;
+  int sign = 0;
   PIDController thetaController;
+  PIDController vxController;
   
   public LidarAlign(Lidar lidar, Drivetrain drivetrain) {
     this.lidar = lidar;
     this.drivetrain = drivetrain;
     thetaController = new PIDController(0.8, 0, 0.01);
+    vxController = new PIDController(0.8, 0, 0.01);
     thetaController.enableContinuousInput(-Math.PI/2, Math.PI/2);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(drivetrain);
@@ -43,22 +48,40 @@ public class LidarAlign extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    //hasLine = (lidar.getLine() != null);
-    //if(hasLine && (lidar.findLineSegment(lidar.getLidarArray()) != null)){
-      /*1. calculate slope of line detected by lidar */
-      /* 2. Find arctan of the difference between their slopes - angle the robot needs to move */
-      //angleToRotate = lidar.getAngleToRotate();
-      /* 3. rotate the robot that to that set angle*/
-      thetaVelocity = thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate);
-      thetaVelocity = MathUtil.clamp(thetaVelocity, -2, 2);
-      SmartDashboard.putNumber("LidarAlign theta velocity", thetaVelocity);
-      drivetrain.setTargetChassisSpeeds(
+      if(lidar.getCovxy() < 0 && !lidar.getCovxyAtZero()) sign = 1;
+      if(lidar.getCovxy() > 0 && !lidar.getCovxyAtZero()) sign = -1;
+      if(lidar.getCovxy() == 0 && !lidar.getCovxyAtZero()) sign = 0;
+      
+      thetaVelocity = sign * 0.2;
+      // thetaVelocity = thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate);
+      // thetaVelocity = MathUtil.clamp(thetaVelocity, -2, 2);
+      // SmartDashboard.putNumber("LidarAlign theta velocity", thetaVelocity);
+      // drivetrain.setTargetChassisSpeeds(
 
-        ChassisSpeeds.fromFieldRelativeSpeeds(
-          0, 
-          0, 
-          thetaVelocity, 
-          Rotation2d.fromDegrees(drivetrain.getHeadingDegrees())));
+      //   ChassisSpeeds.fromFieldRelativeSpeeds(
+      //     0, 
+      //     0, 
+      //     thetaVelocity, 
+      //     Rotation2d.fromDegrees(drivetrain.getHeadingDegrees())));
+      xToDrive = lidar.getMeanX() - 0.4;
+      if(xToDrive > 0){
+        vx = vxController.calculate(drivetrain.getOdometryX(), drivetrain.getOdometryX() + xToDrive);
+        if(vx < 0){
+          vx = MathUtil.clamp(vx, -2, -0.2);
+        }
+        if(vx > 0){
+          vx = MathUtil.clamp(vx, 0.2, 2);
+        }
+        if(lidar.getCovxyAtZero()){
+          thetaVelocity = 0;
+        }
+        drivetrain.setTargetChassisSpeeds(
+          ChassisSpeeds.fromFieldRelativeSpeeds(
+           vx, 
+           0, 
+           thetaVelocity, 
+           Rotation2d.fromDegrees(drivetrain.getHeadingDegrees())));
+      }
   }
 
   // Called once the command ends or is interrupted.
@@ -70,6 +93,10 @@ public class LidarAlign extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
+    if(lidar.getMeanX() <= 0.42 && lidar.getCovxyAtZero()){
+      return true;
+    }
+
     // if(Math.abs(lidar.getAngleToRotate()) < 0.05 || Math.abs(lidar.getAngleToRotate()) > 1.7){
     //   return true;
     // }

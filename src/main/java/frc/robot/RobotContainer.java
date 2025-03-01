@@ -27,7 +27,7 @@ public class RobotContainer
   //private final AprilTagFinder m_aprilTagFinder = new AprilTagFinder();
   private final Lidar m_lidar = new Lidar();
   //private final PrintXandY m_print = new PrintXandY(m_lidar);
-  //private final LidarAlign m_lidarAlign = new LidarAlign(m_lidar, m_drivetrain);
+  private final LidarAlign m_lidarAlign = new LidarAlign(m_lidar, m_drivetrain);
 
   private final TeleopDrive m_teleopCommand = new TeleopDrive(m_drivetrain, m_OI);
 
@@ -39,8 +39,8 @@ public class RobotContainer
   }
 
   private void configureBindings() {
-    //Trigger Align = new Trigger(m_OI::getDriverBButton);
-      // lidarAlignlidar.whileTrue(m_lidarAlign);
+    Trigger lidarAlign = new Trigger(m_OI::getDriverBButton);
+      lidarAlign.whileTrue(m_lidarAlign);
     // Trigger print = new Trigger(m_OI::getDriverRightJoystick);
     //   print.whileTrue(m_print);
   }
