@@ -32,7 +32,7 @@ public class LidarAlign extends Command {
   public LidarAlign(Lidar lidar, Drivetrain drivetrain) {
     this.lidar = lidar;
     this.drivetrain = drivetrain;
-    thetaController = new PIDController(0.8, 0, 0.01);
+    thetaController = new PIDController(0.9, 0, 0.01);
     vxController = new PIDController(0.8, 0, 0.01);
     thetaController.enableContinuousInput(-Math.PI/2, Math.PI/2);
     // Use addRequirements() here to declare subsystem dependencies.
@@ -52,7 +52,8 @@ public class LidarAlign extends Command {
       if(lidar.getCovxy() > 0 && !lidar.getCovxyAtZero() && !lidar.getCovxyIsBad()) sign = -1;
       if(lidar.getCovxy() == 0 && !lidar.getCovxyAtZero() && !lidar.getCovxyIsBad()) sign = 0;
 
-      thetaVelocity = sign * 0.2;
+      thetaVelocity = MathUtil.clamp(lidar.getSqrtCovxy(), 0.25, 0.5);
+      thetaVelocity = sign * thetaVelocity;
       // thetaVelocity = thetaController.calculate(drivetrain.getWrappedHeadingRadians(), drivetrain.getWrappedHeadingRadians() + angleToRotate);
       // thetaVelocity = MathUtil.clamp(thetaVelocity, -2, 2);
       // SmartDashboard.putNumber("LidarAlign theta velocity", thetaVelocity);
@@ -65,7 +66,7 @@ public class LidarAlign extends Command {
       //     Rotation2d.fromDegrees(drivetrain.getHeadingDegrees())));
       xToDrive = lidar.getMeanX() - 0.4;
       if(xToDrive > 0){
-        vx = vxController.calculate(drivetrain.getOdometryX(), drivetrain.getOdometryX() + xToDrive);
+        vx = vxController.calculate(lidar.getMeanX(), lidar.getMeanX() + xToDrive);
         if(vx < 0){
           vx = MathUtil.clamp(vx, -2, -0.2);
         }
@@ -76,36 +77,25 @@ public class LidarAlign extends Command {
           thetaVelocity = 0;
         }
         drivetrain.setTargetChassisSpeeds(
-          ChassisSpeeds.fromFieldRelativeSpeeds(
+          new ChassisSpeeds(
            vx, 
            0, 
-           thetaVelocity, 
-           Rotation2d.fromDegrees(drivetrain.getHeadingDegrees())));
+           thetaVelocity));
       }
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    drivetrain.setTargetChassisSpeeds(ChassisSpeeds.fromRobotRelativeSpeeds(0, 0, 0, new Rotation2d()));
+    drivetrain.setTargetChassisSpeeds( new ChassisSpeeds(0, 0, 0));
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    if(lidar.getMeanX() <= 0.42 && lidar.getCovxyAtZero()){
+    if(lidar.getMeanX() <= 0.41 && lidar.getCovxyAtZero()){
       return true;
     }
-
-    // if(Math.abs(lidar.getAngleToRotate()) < 0.05 || Math.abs(lidar.getAngleToRotate()) > 1.7){
-    //   return true;
-    // }
-    // if(Math.abs(lidar.getAngleToRotate()) < 0.02){
-    //   return true;
-    // }
-    // else if(lidar.getLidarArrayTimestamp() - lidar.getFilteredAngleTimestamp() > 1.0){
-    //   return true;
-    // }
       return false;
   }
 }

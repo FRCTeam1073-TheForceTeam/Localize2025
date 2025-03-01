@@ -89,7 +89,6 @@ public class Lidar extends DiagnosticsSubsystem {
     double angleToRotate;
     double filteredAngleToRotate;
     double filteredAngleTimestamp;
-    double thetaVelocity;
     double sumx = 0;
     double sumy = 0;
     double sumxx = 0;
@@ -148,7 +147,6 @@ public class Lidar extends DiagnosticsSubsystem {
     Point end = new Point(0, 0);
     Pose2d targetRotationPose;
     Pose2d currentPose;
-    PIDController thetaController;
     Random randy = new Random();
     Scan point1;
     Scan point2;
@@ -575,16 +573,17 @@ public class Lidar extends DiagnosticsSubsystem {
     
             majoraxis = k * Math.sqrt(lambdaplus);
             minoraxis = k * Math.sqrt(lambdaminus);
-            if(!getCovxyIsBad()){
-                SmartDashboard.putNumber("Lidar/Covxy", covxy);
-                SmartDashboard.putNumber("Lidar/Sqrt Covxy", getSqrtCovxy());
-                SmartDashboard.putBoolean("Lidar/is at zero", getCovxyAtZero());
-            }
+            
+            SmartDashboard.putNumber("Lidar/Covxy", covxy);
+            SmartDashboard.putNumber("Lidar/Sqrt Covxy", getSqrtCovxy());
+            SmartDashboard.putBoolean("Lidar/is at zero", getCovxyAtZero());
             SmartDashboard.putNumber("Lidar/Mean X", xbar);
             SmartDashboard.putNumber("Lidar/Mean Y", ybar);
             SmartDashboard.putNumber("Lidar/varx", varx);
             SmartDashboard.putNumber("Lidar/vary", vary);
             SmartDashboard.putBoolean("Lidar/covxy is bad", getCovxyIsBad());
+            SmartDashboard.putBoolean("Var X Is High", Math.abs(varx) > 0.005);
+            SmartDashboard.putBoolean("Ratio of Varx to Covxy is High", Math.abs(varx/covxy) > 0.04);
         }
     }
 
@@ -596,7 +595,7 @@ public class Lidar extends DiagnosticsSubsystem {
     }
 
     public boolean getCovxyAtZero(){
-        return Math.abs(getCovxy()) < 0.0005;
+        return Math.abs(getSqrtCovxy()) < 0.015;
     }
 
     public double getCovxy(){
